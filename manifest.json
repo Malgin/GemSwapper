@@ -1,0 +1,17 @@
+{
+  "appID": "e3cc258a2fac405aabadc39e0b1dc299",
+  "dependencies": {
+    "devkit-core": "https://github.com/gameclosure/devkit-core#v4.5.3"
+  },
+  "shortName": "GemSwapper",
+  "studio": {
+    "domain": "studio.example.com",
+    "name": "Your Studio Name",
+    "stagingDomain": "staging.example.com"
+  },
+  "supportedOrientations": [
+    "portrait",
+    "landscape"
+  ],
+  "title": "GemSwapper"
+}
