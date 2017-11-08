@@ -22,7 +22,6 @@ exports = Class(function() {
     this._gemColors = ['blue', 'green', 'purple', 'red', 'yellow'];
     this._gemPool = new GemPool();
     this._gemGrid = [];
-    this._gemHighestZIndex = 0;
 
     this._build();
   };
@@ -35,8 +34,8 @@ exports = Class(function() {
 
       for (var col = 0; col < COLS_PER_LEVEL; col++) {
 
-        var xPosition = LEFT_PADDING + DISTANCE_BETWEEN_GEMS * this._gemGrid[row].length + Gem.GEM_WIDTH * this._gemGrid[row].length;
-        var yPosition = TOP_PADDING + DISTANCE_BETWEEN_GEMS * (this._gemGrid.length - 1) + Gem.GEM_HEIGHT * (this._gemGrid.length - 1);
+        var xPosition = LEFT_PADDING + this._gemGrid[row].length * (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH);
+        var yPosition = TOP_PADDING + (this._gemGrid.length - 1) * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
 
         var gem = this._gemPool.obtainGem(this._gemColors[Math.floor(Math.random() * this._gemColors.length + 1)]); // TODO: obtain gem from gemPool randomly
 
@@ -47,38 +46,12 @@ exports = Class(function() {
           visible: true
         });
 
-        gem.on('DragStart', bind(this, function(dragEvt) {
-
-          dragEvt.target.updateOpts({
-            zIndex: ++this._gemHighestZIndex
-          });
-
-          this._container.emit('gem:DragStart');
-        }));
-
-        gem.on('Drag', bind(this, function(startEvt, dragEvt, delta) {
-
-          this._container.emit('gem:Drag', startEvt, dragEvt, delta);
-        }));
-
-        gem.on('DragStop', bind(this, function() {
-
-          this._container.emit('gem:DragStop');
-        }));
-
         gem.setGridPosition({ row, col });
         gem.setOriginalPosition(new Point(gem.style.x, gem.style.y));
 
         this._gemGrid[row][col] = gem;
-
-        this._gemHighestZIndex += 1;
       }
     }
-
-    // animate.getGroup('gem-swap-animation').on('Finish', function() {
-    //
-    //   console.log('Swap animation ENDED');
-    // });
   };
 
   /**
@@ -112,6 +85,16 @@ exports = Class(function() {
     return true;
   };
 
+  this.getGemByCoords = function(point) {
+
+    var gemCol = Math.ceil((point.x - LEFT_PADDING) / (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH)) - 1;
+    var gemRow = Math.ceil((point.y - TOP_PADDING) / (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT)) - 1;
+
+    console.log(`OrigGem row: ${gemRow}, col: ${gemCol}`);
+
+    return this._gemGrid[gemRow][gemCol];
+  };
+
   /**
    * Detects if dragged gem collided with one in dragging direction
    * Otherwise, returns null
@@ -139,11 +122,7 @@ exports = Class(function() {
         break;
     }
 
-    if (intersect.rectAndRect(origGem.getCollisionBox(), targetGem.getCollisionBox())) {
-      return targetGem;
-    }
-
-    return null;
+    return targetGem;
   };
 
   this.swapGems = function(origGem, targetGem) {
@@ -161,6 +140,9 @@ exports = Class(function() {
 
     origGem.setGridPosition(targetGemGridPos);
     targetGem.setGridPosition(origGemGridPos);
+
+    origGem.setOriginalPosition(targetGemCoords);
+    targetGem.setOriginalPosition(origGemCoords);
 
     this._gemGrid[origGemGridPos.row][origGemGridPos.col] = targetGem;
     this._gemGrid[targetGemGridPos.row][targetGemGridPos.col] = origGem;

@@ -18,6 +18,7 @@ exports = Class(ViewPool, function(supr) {
   this.obtainGem = function(color) {
 
     if (['blue', 'green', 'purple', 'red', 'yellow'].indexOf(color) === -1) {
+
       color = 'blue';
     }
 
@@ -25,10 +26,6 @@ exports = Class(ViewPool, function(supr) {
 
     gem.updateOpts({
       image: `resources/images/gems/${color}.png`
-    });
-
-    dragEvent.makeDraggable(gem, {
-      radius: 2
     });
 
     return gem;

@@ -23,28 +23,7 @@ exports = Class(ImageView, function(supr) {
     });
 
     supr(this, 'init', [opts]);
-
-    this._build();
   };
-
-  this._build = function() {
-
-    this.on('DragStart', bind(this, function() {
-
-      this.emit('gem:DragStart');
-    }));
-
-    this.on('Drag', bind(this, function(startEvt, dragEvt, delta) {
-
-      this.emit('gem:Drag');
-    }));
-
-    this.on('DragStop', bind(this, function() {
-
-      this.emit('gem:DragStop');
-    }));
-  };
-
 
   /**
    *

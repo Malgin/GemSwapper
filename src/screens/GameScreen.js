@@ -1,10 +1,10 @@
-import math.geom.Vec2D as Vec2D;
 import math.geom.Point as Point;
 
 import ui.ImageView as ImageView;
 
 import src.managers.LevelManager as LevelManager;
 import src.LevelGrid as LevelGrid;
+import src.models.gem.Gem as Gem;
 
 exports = Class(ImageView, function(supr) {
 
@@ -12,6 +12,9 @@ exports = Class(ImageView, function(supr) {
 
     this._levelManager = null;
     this.level = null;
+    this._dragStarted = false;
+    this._swapStarted = false;
+    this._dragStartCoords = null;
 
     this.width = opts.width;
     this.height = opts.height;
@@ -37,50 +40,62 @@ exports = Class(ImageView, function(supr) {
 
     // TODO init scores manager
 
-    this.on('gem:DragStart', bind(this, function() {
+    this.on('InputStart', bind(this, function(event, point) {
 
-      console.log('GemDragStarted');
+      console.log('Input started!');
+
+      this._dragStarted = true;
+      this._dragStartCoords = point;
+      this._origGem = this._level.getGemByCoords(point);
     }));
 
-    this.on('gem:Drag', bind(this, function(startEvt, dragEvt, delta) {
+    this.on('InputMove', bind(this, function(event, point) {
 
-      console.log('GemDrag');
+      if (!this._dragStarted || this._swapStarted) return;
 
-      // check for collision with nearest blocks
-      var origGem = startEvt.target;
-      var direction = this._getDragDirection(delta);
+      console.log('Input moved!!');
 
-      // get drag direction
-      if (this._level.gemPresentToDirection(origGem, direction)) {
+      var delta = { x: point.x - this._dragStartCoords.x, y: point.y - this._dragStartCoords.y };
 
-        var targetGem = this._level.getTargetGem(origGem, direction);
+      if (this._movedFarEnough(delta)) {
 
-        if (targetGem !== null) {
+        // get drag direction
+        var direction = this._getDragDirection(delta);
 
-          // if got a collision, decide whether to swap gems, or return to original position
-          console.log(`direction is ${direction}, delta is x: ${ delta.x }, y: ${ delta.y }`);
-          console.log('COLLIDED!');
+        if (this._level.gemPresentToDirection(this._origGem, direction)) {
 
-          if (this._shouldSwapGems(origGem, targetGem)) {
+          var targetGem = this._level.getTargetGem(this._origGem, direction);
 
-            // swap gems and stop dragging stop
-            this._level.swapGems(origGem, targetGem);
+          if (this._shouldSwapGems(this._origGem, targetGem)) {
+
+            this._swapStarted = true;
+
+            console.log(`direction is ${ direction }, delta is x: ${ delta.x }, y: ${ delta.y }`);
+
+            this._level.swapGems(this._origGem, targetGem);
             // destroy all lines
             // generate new gems
             // destroy all lines, if any
+          } else {
+
+            // play animation, and don't move gems
           }
         } else {
-          // continue dragging, we should git a gem sometime
+
+          // return gem back to it's original position
         }
       } else {
 
-        // return gem back to it's original position
+        // continue dragging, we should hit a gem eventually
       }
     }));
 
-    this.on('gem:DragStop', bind(this, function() {
+    this.on('InputSelect', bind(this, function(event, point) {
 
-      console.log('GemDragStopped');
+      console.log('Input ended!!!');
+
+      this._dragStarted = false;
+      this._swapStarted = false;
     }));
   };
 
@@ -95,6 +110,11 @@ exports = Class(ImageView, function(supr) {
       if (dragDelta.y > 0) return LevelGrid.DIRECTION_DOWN;
       else return LevelGrid.DIRECTION_UP;
     }
+  };
+
+  this._movedFarEnough = function(delta) {
+
+    return Math.abs(delta.x) >= Gem.GEM_WIDTH || Math.abs(delta.y) >= Gem.GEM_HEIGHT;
   };
 
   this._shouldSwapGems = function() {
