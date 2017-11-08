@@ -1,4 +1,5 @@
 import math.geom.Vec2D as Vec2D;
+import math.geom.Point as Point;
 
 import ui.ImageView as ImageView;
 
@@ -47,7 +48,7 @@ exports = Class(ImageView, function(supr) {
 
       // check for collision with nearest blocks
       var origGem = startEvt.target;
-      var direction = this._getDragDirection(startEvt, dragEvt);
+      var direction = this._getDragDirection(delta);
 
       // get drag direction
       if (this._level.gemPresentToDirection(origGem, direction)) {
@@ -56,7 +57,8 @@ exports = Class(ImageView, function(supr) {
 
         if (targetGem !== null) {
           // if got a collision, decide whether to swap gems, or return to original position
-          console.log("COLLIDED!");
+          console.log(`direction is ${direction}, delta is x: ${ delta.x }, y: ${ delta.y }`);
+          console.log('s');
         }
       } else {
 
@@ -70,43 +72,16 @@ exports = Class(ImageView, function(supr) {
     }));
   };
 
-  this._getDragDirection = function(startEvt, dragEvt) {
+  this._getDragDirection = function(dragDelta) {
 
-    // TODO Implement this
-    // get drag vector
-    var dragVector = (new Vec2D({ x: dragEvt.srcPt.x - startEvt.srcPt.x, y: dragEvt.srcPt.y - startEvt.srcPt.y })).getUnitVector();
-
-    // figure out which way it is dragged by scalar multiptlication
-    // start from left
-    var directionLeftVector = new Vec2D({ x: -1, y: 0 });
-    var scalarWithLeftVector = dragVector.x * directionLeftVector.x + dragVector.y * directionLeftVector.y;
-
-    if (scalarWithLeftVector >= 0.5) {
-      return LevelGrid.DIRECTION_LEFT;
-    }
-
-    // up
-    var directionUpVector = new Vec2D({ x: 0, y: -1 });
-    var scalarWithUpVector = dragVector.x * directionUpVector.x + dragVector.y * directionUpVector.y;
-
-    if (scalarWithUpVector >= 0.5) {
-      return LevelGrid.DIRECTION_UP;
-    }
-
-    // right
-    var directionRightVector = new Vec2D({ x: 1, y: 0 });
-    var scalarWithRightVector = dragVector.x * directionRightVector.x + dragVector.y * directionRightVector.y;
-
-    if (scalarWithRightVector >= 0.5) {
-      return LevelGrid.DIRECTION_RIGHT;
-    }
-
-    // down
-    var directionDownVector = new Vec2D({ x: 0, y: 1 });
-    var scalarWithDownVector = dragVector.x * directionDownVector.x + dragVector.y * directionDownVector.y;
-
-    if (scalarWithDownVector >= 0.5) {
-      return LevelGrid.DIRECTION_DOWN;
+    if (Math.abs(dragDelta.x) >= Math.abs(dragDelta.y)) {
+      // horizontal drag
+      if (dragDelta.x > 0) return LevelGrid.DIRECTION_RIGHT;
+      else return LevelGrid.DIRECTION_LEFT;
+    } else {
+      // vertical drag
+      if (dragDelta.y > 0) return LevelGrid.DIRECTION_DOWN;
+      else return LevelGrid.DIRECTION_UP;
     }
   };
 
