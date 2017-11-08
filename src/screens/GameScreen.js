@@ -58,7 +58,7 @@ exports = Class(ImageView, function(supr) {
         if (targetGem !== null) {
           // if got a collision, decide whether to swap gems, or return to original position
           console.log(`direction is ${direction}, delta is x: ${ delta.x }, y: ${ delta.y }`);
-          console.log('s');
+          console.log('COLLIDED!');
         }
       } else {
 
