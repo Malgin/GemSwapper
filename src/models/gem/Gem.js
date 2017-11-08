@@ -45,6 +45,11 @@ exports = Class(ImageView, function(supr) {
     }));
   };
 
+
+  /**
+   *
+   * @param gridPosition {row: <Number>, col: <Number>}
+   */
   this.setGridPosition = function(gridPosition) {
 
     this._gridPosition = gridPosition;

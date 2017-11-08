@@ -56,9 +56,21 @@ exports = Class(ImageView, function(supr) {
         var targetGem = this._level.getTargetGem(origGem, direction);
 
         if (targetGem !== null) {
+
           // if got a collision, decide whether to swap gems, or return to original position
           console.log(`direction is ${direction}, delta is x: ${ delta.x }, y: ${ delta.y }`);
           console.log('COLLIDED!');
+
+          if (this._shouldSwapGems(origGem, targetGem)) {
+
+            // swap gems and stop dragging stop
+            this._level.swapGems(origGem, targetGem);
+            // destroy all lines
+            // generate new gems
+            // destroy all lines, if any
+          }
+        } else {
+          // continue dragging, we should git a gem sometime
         }
       } else {
 
@@ -84,5 +96,10 @@ exports = Class(ImageView, function(supr) {
       else return LevelGrid.DIRECTION_UP;
     }
   };
+
+  this._shouldSwapGems = function() {
+
+    return true;
+  }
 
 });

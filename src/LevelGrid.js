@@ -1,4 +1,7 @@
 import math.geom.intersect as intersect;
+import math.geom.Point as Point;
+
+import animate;
 
 import src.models.gem.Gem as Gem;
 import src.models.gem.GemPool as GemPool;
@@ -15,7 +18,6 @@ exports = Class(function() {
   this.init = function(opts) {
 
     this._container = opts.container;
-
 
     this._gemColors = ['blue', 'green', 'purple', 'red', 'yellow'];
     this._gemPool = new GemPool();
@@ -65,12 +67,18 @@ exports = Class(function() {
         }));
 
         gem.setGridPosition({ row, col });
+        gem.setOriginalPosition(new Point(gem.style.x, gem.style.y));
 
         this._gemGrid[row][col] = gem;
 
         this._gemHighestZIndex += 1;
       }
     }
+
+    // animate.getGroup('gem-swap-animation').on('Finish', function() {
+    //
+    //   console.log('Swap animation ENDED');
+    // });
   };
 
   /**
@@ -137,6 +145,38 @@ exports = Class(function() {
 
     return null;
   };
+
+  this.swapGems = function(origGem, targetGem) {
+
+    // TODO block gem from dragging (???)
+    // change gems position with animation
+    var origGemCoords = origGem.getOriginalPosition();
+    var targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
+
+    animate(origGem, 'gem-swap-animation').now({x: targetGemCoords.x, y: targetGemCoords.y});
+    animate(targetGem, 'gem-swap-animation').now({x: origGemCoords.x, y: origGemCoords.y});
+
+    var origGemGridPos = origGem.getGridPosition();
+    var targetGemGridPos = targetGem.getGridPosition();
+
+    origGem.setGridPosition(targetGemGridPos);
+    targetGem.setGridPosition(origGemGridPos);
+
+    this._gemGrid[origGemGridPos.row][origGemGridPos.col] = targetGem;
+    this._gemGrid[targetGemGridPos.row][targetGemGridPos.col] = origGem;
+
+    origGem.emit('DragStop');
+
+    animate.getGroup('gem-swap-animation').on('Finish', function() {
+
+      // emit event to animate broken scored gems
+    });
+
+    // animate(origGem).now({ x: targetGem.style.x - origGem.style.x, y: targetGem.style.y - origGem.style.y });
+    // animate(targetGem).now({ x: origGem.style.x - targetGem.style.x, y: origGem.style.y - targetGem.style.y });
+    // update gems position in grid
+    // update grid with with new gems
+  }
 });
 
 exports.DIRECTION_LEFT = 'LEFT';
