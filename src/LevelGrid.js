@@ -1,3 +1,5 @@
+import math.geom.intersect as intersect;
+
 import src.models.gem.Gem as Gem;
 import src.models.gem.GemPool as GemPool;
 
@@ -54,7 +56,7 @@ exports = Class(function() {
 
         gem.on('Drag', bind(this, function(startEvt, dragEvt, delta) {
 
-          this._container.emit('gem:Drag');
+          this._container.emit('gem:Drag', startEvt, dragEvt, delta);
         }));
 
         gem.on('DragStop', bind(this, function() {
@@ -62,10 +64,82 @@ exports = Class(function() {
           this._container.emit('gem:DragStop');
         }));
 
+        gem.setGridPosition({ row, col });
+
         this._gemGrid[row][col] = gem;
 
         this._gemHighestZIndex += 1;
       }
     }
-  }
+  };
+
+  /**
+   *
+   * @param direction One of ['LEFT', 'UP', 'RIGHT', 'DOWN']
+   * @return {boolean}
+   */
+  this.gemPresentToDirection = function(gem, direction) {
+
+    var gemGridPosition = gem.getGridPosition();
+
+    switch(direction) {
+      case exports.DIRECTION_LEFT:
+        if (gemGridPosition.col === 0) return false;
+        break;
+
+      case exports.DIRECTION_UP:
+        if (gemGridPosition.row === 0) return false;
+        break;
+
+      case exports.DIRECTION_RIGHT:
+        if (gemGridPosition.col === this._gemGrid[gemGridPosition.row].length - 1) return false;
+        break;
+
+      case exports.DIRECTION_DOWN:
+        if (gemGridPosition.row === this._gemGrid.length - 1) return false;
+        break;
+    }
+
+    // if we're not dragging towards the edges of a game field, we should've a gem there
+    return true;
+  };
+
+  /**
+   * Detects if dragged gem collided with one in dragging direction
+   * Otherwise, returns null
+   */
+  this.getTargetGem = function(origGem, direction) {
+
+    var origGemGridPos = origGem.getGridPosition();
+    var targetGem = null;
+
+    switch(direction) {
+      case exports.DIRECTION_LEFT:
+        targetGem = this._gemGrid[origGemGridPos.row][origGemGridPos.col - 1];
+        break;
+
+      case exports.DIRECTION_UP:
+        targetGem = this._gemGrid[origGemGridPos.row - 1][origGemGridPos.col];
+        break;
+
+      case exports.DIRECTION_RIGHT:
+        targetGem = this._gemGrid[origGemGridPos.row][origGemGridPos.col + 1];
+        break;
+
+      case exports.DIRECTION_DOWN:
+        targetGem = this._gemGrid[origGemGridPos.row + 1][origGemGridPos.col];
+        break;
+    }
+
+    if (intersect.rectAndRect(origGem.getCollisionBox(), targetGem.getCollisionBox())) {
+      return targetGem;
+    }
+
+    return null;
+  };
 });
+
+exports.DIRECTION_LEFT = 'LEFT';
+exports.DIRECTION_UP = 'UP';
+exports.DIRECTION_RIGHT = 'RIGTH';
+exports.DIRECTION_DOWN = 'DOWN';
