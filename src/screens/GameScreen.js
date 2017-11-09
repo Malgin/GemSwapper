@@ -73,9 +73,7 @@ exports = Class(ImageView, function(supr) {
             console.log(`direction is ${ direction }, delta is x: ${ delta.x }, y: ${ delta.y }`);
 
             this._level.swapGems(this._origGem, targetGem);
-            // destroy all lines
-            // generate new gems
-            // destroy all lines, if any
+            // destroy all lines and generate new gems while 3+ groups still present
           } else {
 
             // play animation, and don't move gems
@@ -119,6 +117,9 @@ exports = Class(ImageView, function(supr) {
 
   this._shouldSwapGems = function() {
 
+    // detect swap
+    // check whether this swap is available in a swaplist
+    // if so, return true
     return true;
   }
 

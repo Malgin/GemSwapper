@@ -25,6 +25,15 @@ exports = Class(ImageView, function(supr) {
     supr(this, 'init', [opts]);
   };
 
+  this.updateOpts = function(opts) {
+
+    if (opts.color) {
+      this.color = opts.color;
+    }
+
+    supr(this, 'updateOpts', [opts]);
+  };
+
   /**
    *
    * @param gridPosition {row: <Number>, col: <Number>}
@@ -62,3 +71,9 @@ exports = Class(ImageView, function(supr) {
 
 exports.GEM_WIDTH = 50;
 exports.GEM_HEIGHT = 50;
+
+exports.GEM_COLOR_BLUE = 'blue';
+exports.GEM_COLOR_GREEN = 'green';
+exports.GEM_COLOR_PURPLE = 'purple';
+exports.GEM_COLOR_RED = 'red';
+exports.GEM_COLOR_YELLOW = 'yellow';

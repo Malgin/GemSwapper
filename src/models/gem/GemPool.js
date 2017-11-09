@@ -25,6 +25,7 @@ exports = Class(ViewPool, function(supr) {
     var gem = this.obtainView();
 
     gem.updateOpts({
+      color: color,
       image: `resources/images/gems/${color}.png`
     });
 
