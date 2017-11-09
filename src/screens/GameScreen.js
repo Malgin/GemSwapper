@@ -66,7 +66,7 @@ exports = Class(ImageView, function(supr) {
 
           var targetGem = this._level.getTargetGem(this._origGem, direction);
 
-          if (this._shouldSwapGems(this._origGem, targetGem)) {
+          if (this._level.possibleSwapsContainsSwapFor(this._origGem, targetGem)) {
 
             this._swapStarted = true;
 
@@ -114,13 +114,4 @@ exports = Class(ImageView, function(supr) {
 
     return Math.abs(delta.x) >= Gem.GEM_WIDTH || Math.abs(delta.y) >= Gem.GEM_HEIGHT;
   };
-
-  this._shouldSwapGems = function() {
-
-    // detect swap
-    // check whether this swap is available in a swaplist
-    // if so, return true
-    return true;
-  }
-
 });

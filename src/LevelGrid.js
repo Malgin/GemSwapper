@@ -73,7 +73,6 @@ exports = Class(function() {
       }
     }
 
-    // TODO generate swap list
     this._generatePossibleSwapsList();
   };
 
@@ -176,7 +175,29 @@ exports = Class(function() {
 
     // update gems position in grid
     // update grid with new gems
-    // TODO re-generate swap list
+    this._generatePossibleSwapsList();
+  };
+
+  this.possibleSwapsContainsSwapFor = function(origGem, targetGem) {
+
+    for (var i = 0, length = this._possibleSwaps.length; i < length; i++) {
+
+      var swap = this._possibleSwaps[i];
+
+      if (
+          (swap[0].getGridPosition().col === origGem.getGridPosition().col &&
+          swap[0].getGridPosition().row === origGem.getGridPosition().row &&
+          swap[1].getGridPosition().col === targetGem.getGridPosition().col &&
+          swap[1].getGridPosition().row === targetGem.getGridPosition().row) ||
+
+          (swap[1].getGridPosition().col === origGem.getGridPosition().col &&
+          swap[1].getGridPosition().row === origGem.getGridPosition().row &&
+          swap[0].getGridPosition().col === targetGem.getGridPosition().col &&
+          swap[0].getGridPosition().row === targetGem.getGridPosition().row)
+      ) return true;
+    }
+
+    return false;
   };
 
   this._generatePossibleSwapsList = function() {
@@ -278,9 +299,7 @@ exports = Class(function() {
       sequenceLength += 1;
     }
 
-    if (sequenceLength >= 3) return true;
-
-    return false;
+    return (sequenceLength >= 3);
   }
 });
 
