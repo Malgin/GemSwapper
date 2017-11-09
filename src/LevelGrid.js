@@ -46,7 +46,18 @@ exports = Class(function() {
         var yPosition = TOP_PADDING + (this._gemGrid.length - 1) * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
 
         // TODO obtain gem without creating chains of 3+ gems
-        var gem = this._gemPool.obtainGem(this._gemColors[Math.floor(Math.random() * this._gemColors.length + 1)]);
+        do {
+
+          var gem = this._gemPool.obtainGem(this._gemColors[Math.floor(Math.random() * this._gemColors.length + 1)]);
+        } while (
+            (row >= 2 &&
+            this._gemGrid[row - 1][col].color === gem.color &&
+            this._gemGrid[row - 2][col].color === gem.color) ||
+            (col >= 2 &&
+            this._gemGrid[row][col - 1].color === gem.color &&
+            this._gemGrid[row][col - 2].color === gem.color)
+        );
+
 
         gem.updateOpts({
           superview: this._container,
