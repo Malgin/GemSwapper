@@ -8,7 +8,6 @@ exports = Class(ImageView, function(supr) {
 
     this._collisionBox = new Rectangle();
     this._originalPosition = new Point();
-    this._destroyed = false;
 
     /**
      * Contains two properties: row and col
@@ -67,16 +66,6 @@ exports = Class(ImageView, function(supr) {
   this.getOriginalPosition = function() {
 
     return this._originalPosition;
-  };
-
-  this.destroy = function() {
-
-    this._destroyed = true;
-  };
-
-  this.isDestroyed = function() {
-
-    return this._destroyed;
   };
 });
 

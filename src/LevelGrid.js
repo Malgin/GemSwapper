@@ -260,41 +260,12 @@ exports = Class(EventEmitter, function(supr) {
 
         (bind(this, function(gem) {
 
-          // gem.destroy();
-
           animate(gem, 'GemDestroy')
               .now({ width: 0, height: 0 })
               .then(bind(this, function() {
 
-                // animate all above gems to fall
-                if (gem.getGridPosition().row > 0) {
-                  // var fallingGem = this._gemGrid[gem.getGridPosition().row - 1][gem.getGridPosition().col];
-
-                  for (var row = gem.getGridPosition().row - 1; row >= 0; row--) {
-
-                    var fallingGem = this._gemGrid[row][gem.getGridPosition().col];
-
-                    (bind(this, function(fallingGem) {
-
-                      animate(fallingGem)
-                          .now({ x: fallingGem.style.x, y: fallingGem.style.y + (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT) })
-                          .then(bind(this, function() {
-
-                            fallingGem.setGridPosition({
-                              row: fallingGem.getGridPosition().row + 1,
-                              col: fallingGem.getGridPosition().col
-                            });
-
-                            this._gemGrid[fallingGem.getGridPosition().row][fallingGem.getGridPosition().col] = fallingGem;
-
-                            fallingGem.setOriginalPosition(new Point(fallingGem.style.x, fallingGem.style.y));
-                          }));
-                    })(fallingGem));
-
-
-              }
-            }
-          }));
+                this._releaseGem(gem)
+              }));
         })(gem));
       }
     }
@@ -305,16 +276,61 @@ exports = Class(EventEmitter, function(supr) {
 
         var gem = vertSequences[i][j];
 
-        gem.destroy();
+        (bind(this, function(gem) {
 
-        animate(gem, 'GemDestroy')
-            .now({ width: 0, height: 0 });
+          animate(gem, 'GemDestroy')
+              .now({ width: 0, height: 0 })
+              .then(bind(this, function() {
+
+                this._releaseGem(gem);
+              }));
+        })(gem));
       }
     }
 
-    // iterate over grid
-    // clear & release destroyed gems views
-    // animate falling gems, update their positions in grids
+    animate.getGroup('GemDestroy').on('Finish', bind(this, function() {
+
+      // detect gaps and fill them
+      for (let row = this._gemGrid.length - 1; row >= 0; row--) {
+
+        for (let col = this._gemGrid[row].length - 1; col >= 0; col--) {
+
+          const gem = this._gemGrid[row][col];
+
+          if (row > 0 && gem === null) {
+
+            // go up until you find any gem or hit ceiling
+            let trackRow = row;
+            let trackGem = null;
+
+            while (--trackRow >= 0 && trackGem === null) {
+
+              trackGem = this._gemGrid[trackRow][col];
+
+              if (trackGem !== null) {
+
+                this._gemGrid[trackGem.getGridPosition().row][trackGem.getGridPosition().col] = null;
+                this._gemGrid[row][col] = trackGem;
+                trackGem.setGridPosition({ row, col });
+
+                (bind(this, function(trackGem) {
+
+                  animate(trackGem)
+                      .now({
+                        x: trackGem.getOriginalPosition().x,
+                        y: TOP_PADDING + trackGem.getGridPosition().row * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT)
+                      })
+                      .then(bind(this, function() {
+
+                        trackGem.setOriginalPosition(new Point(trackGem.style.x, trackGem.style.y));
+                      }));
+                })(trackGem));
+              }
+            }
+          }
+        }
+      }
+    }));
   };
 
   this._generatePossibleSwapsList = function() {
@@ -417,7 +433,13 @@ exports = Class(EventEmitter, function(supr) {
     }
 
     return (sequenceLength >= 3);
-  }
+  };
+
+  this._releaseGem = function(gem) {
+
+      this._gemGrid[gem.getGridPosition().row][gem.getGridPosition().col] = null;
+      this._gemPool.releaseView(gem);
+  };
 });
 
 exports.DIRECTION_LEFT = 'LEFT';
