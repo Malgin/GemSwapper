@@ -72,7 +72,7 @@ exports = Class(ImageView, function(supr) {
 
           var targetGem = this._level.getTargetGem(this._origGem, direction);
 
-          if (this._level.possibleSwapsContainsSwapFor(this._origGem, targetGem)) {
+          if (this._level.swapPossibleFor(this._origGem, targetGem)) {
 
             console.log(`direction is ${ direction }, delta is x: ${ delta.x }, y: ${ delta.y }`);
 

@@ -166,8 +166,6 @@ exports = Class(EventEmitter, function(supr) {
             horizSequences: this.detectHorizontalSequences(),
             vertSequences: this.detectVerticalSequences()
           });
-
-          // this.emit('Gem:SwapEnded');
         }));
 
     var origGemGridPos = origGem.getGridPosition();
@@ -185,7 +183,7 @@ exports = Class(EventEmitter, function(supr) {
     this._generatePossibleSwapsList();
   };
 
-  this.possibleSwapsContainsSwapFor = function(origGem, targetGem) {
+  this.swapPossibleFor = function(origGem, targetGem) {
 
     for (var i = 0, length = this._possibleSwaps.length; i < length; i++) {
 
@@ -260,13 +258,44 @@ exports = Class(EventEmitter, function(supr) {
 
         var gem = horizSequences[i][j];
 
-        animate(gem)
-            .now({ width: 0, height: 0 })
-            .then(bind(this, function() {
+        (bind(this, function(gem) {
 
-              this._gemGrid[gem.getGridPosition().row][gem.getGridPosition().col] = null;
-              this._gemPool.releaseView(gem);
-            }));
+          // gem.destroy();
+
+          animate(gem, 'GemDestroy')
+              .now({ width: 0, height: 0 })
+              .then(bind(this, function() {
+
+                // animate all above gems to fall
+                if (gem.getGridPosition().row > 0) {
+                  // var fallingGem = this._gemGrid[gem.getGridPosition().row - 1][gem.getGridPosition().col];
+
+                  for (var row = gem.getGridPosition().row - 1; row >= 0; row--) {
+
+                    var fallingGem = this._gemGrid[row][gem.getGridPosition().col];
+
+                    (bind(this, function(fallingGem) {
+
+                      animate(fallingGem)
+                          .now({ x: fallingGem.style.x, y: fallingGem.style.y + (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT) })
+                          .then(bind(this, function() {
+
+                            fallingGem.setGridPosition({
+                              row: fallingGem.getGridPosition().row + 1,
+                              col: fallingGem.getGridPosition().col
+                            });
+
+                            this._gemGrid[fallingGem.getGridPosition().row][fallingGem.getGridPosition().col] = fallingGem;
+
+                            fallingGem.setOriginalPosition(new Point(fallingGem.style.x, fallingGem.style.y));
+                          }));
+                    })(fallingGem));
+
+
+              }
+            }
+          }));
+        })(gem));
       }
     }
 
@@ -276,15 +305,16 @@ exports = Class(EventEmitter, function(supr) {
 
         var gem = vertSequences[i][j];
 
-        animate(gem)
-            .now({ width: 0, height: 0 })
-            .then(bind(this, function() {
+        gem.destroy();
 
-              this._gemGrid[gem.getGridPosition().row][gem.getGridPosition().col] = null;
-              this._gemPool.releaseView(gem);
-            }));
+        animate(gem, 'GemDestroy')
+            .now({ width: 0, height: 0 });
       }
     }
+
+    // iterate over grid
+    // clear & release destroyed gems views
+    // animate falling gems, update their positions in grids
   };
 
   this._generatePossibleSwapsList = function() {
