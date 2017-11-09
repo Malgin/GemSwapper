@@ -17,7 +17,7 @@ exports = Class(ImageView, function(supr) {
     this._levelManager = null;
     this.level = null;
     this._dragStarted = false;
-    this._swapStarted = false;
+    this._uesrInteractionStopped = false;
     this._dragStartCoords = null;
 
     this.width = opts.width;
@@ -55,7 +55,7 @@ exports = Class(ImageView, function(supr) {
 
     this.on('InputMove', bind(this, function(event, point) {
 
-      if (!this._dragStarted || this._swapStarted) return;
+      if (!this._dragStarted || this._uesrInteractionStopped) return;
 
       console.log('Input moved!!');
 
@@ -68,7 +68,7 @@ exports = Class(ImageView, function(supr) {
 
         if (this._level.gemPresentToDirection(this._origGem, direction)) {
 
-          this._swapStarted = true;
+          this._uesrInteractionStopped = true;
 
           var targetGem = this._level.getTargetGem(this._origGem, direction);
 
@@ -77,7 +77,6 @@ exports = Class(ImageView, function(supr) {
             console.log(`direction is ${ direction }, delta is x: ${ delta.x }, y: ${ delta.y }`);
 
             this._level.swapGems(this._origGem, targetGem);
-            // destroy all lines and generate new gems while 3+ groups still present
           } else {
 
             // play animation, and don't move gems
@@ -96,9 +95,6 @@ exports = Class(ImageView, function(supr) {
                 .then({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
                 .then({ x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION);
           }
-        } else {
-
-          // return gem back to it's original position
         }
       } else {
 
@@ -111,7 +107,7 @@ exports = Class(ImageView, function(supr) {
       console.log('Input ended!!!');
 
       this._dragStarted = false;
-      this._swapStarted = false;
+      this._uesrInteractionStopped = false;
     }));
   };
 

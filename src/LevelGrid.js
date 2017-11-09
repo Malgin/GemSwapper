@@ -1,3 +1,4 @@
+import event.Emitter as EventEmitter;
 import math.geom.intersect as intersect;
 import math.geom.Point as Point;
 
@@ -14,7 +15,7 @@ const TOP_PADDING = 340;
 const LEFT_PADDING = 45;
 const SWAP_ANIMATION_DURATION = 300;
 
-exports = Class(function() {
+exports = Class(EventEmitter, function(supr) {
 
   this.init = function(opts) {
 
@@ -33,6 +34,8 @@ exports = Class(function() {
     this._possibleSwaps = [];
 
     this._build();
+
+    supr(this, 'init', [opts]);
   };
 
   this._build = function() {
@@ -155,7 +158,17 @@ exports = Class(function() {
     var targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
 
     animate(origGem).now({x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_ANIMATION_DURATION);
-    animate(targetGem).now({x: origGemCoords.x, y: origGemCoords.y}, SWAP_ANIMATION_DURATION);
+    animate(targetGem)
+        .now({x: origGemCoords.x, y: origGemCoords.y}, SWAP_ANIMATION_DURATION)
+        .then(bind(this, function() {
+
+          this.deleteSequences({
+            horizSequences: this.detectHorizontalSequences(),
+            vertSequences: this.detectVerticalSequences()
+          });
+
+          // this.emit('Gem:SwapEnded');
+        }));
 
     var origGemGridPos = origGem.getGridPosition();
     var targetGemGridPos = targetGem.getGridPosition();
@@ -178,20 +191,100 @@ exports = Class(function() {
 
       var swap = this._possibleSwaps[i];
 
-      if (
-          (swap[0].getGridPosition().col === origGem.getGridPosition().col &&
-          swap[0].getGridPosition().row === origGem.getGridPosition().row &&
-          swap[1].getGridPosition().col === targetGem.getGridPosition().col &&
-          swap[1].getGridPosition().row === targetGem.getGridPosition().row) ||
-
-          (swap[1].getGridPosition().col === origGem.getGridPosition().col &&
-          swap[1].getGridPosition().row === origGem.getGridPosition().row &&
-          swap[0].getGridPosition().col === targetGem.getGridPosition().col &&
-          swap[0].getGridPosition().row === targetGem.getGridPosition().row)
-      ) return true;
+      if ((swap[0] === origGem && swap[1] === targetGem) || (swap[1] === origGem && swap[0] === targetGem)) return true;
     }
 
     return false;
+  };
+
+  this.detectHorizontalSequences = function() {
+
+    var horizSequences = [];
+
+    // detect horizontal sequences
+    for (var row = 0, rowsNum = this._gemGrid.length; row < rowsNum; row++) {
+
+      for (var col = 0, colsNum = this._gemGrid[row].length; col < colsNum - 2; col++) {
+
+        if (this._gemGrid[row][col].color === this._gemGrid[row][col + 1].color &&
+            this._gemGrid[row][col].color === this._gemGrid[row][col + 2].color) {
+
+          var sequence = [this._gemGrid[row][col]];
+
+          while (col + 1 < colsNum && this._gemGrid[row][col].color === this._gemGrid[row][col + 1].color) {
+
+            col += 1;
+            sequence.push(this._gemGrid[row][col]);
+          }
+
+          horizSequences.push(sequence);
+        }
+      }
+    }
+
+    return horizSequences;
+  };
+
+  this.detectVerticalSequences = function() {
+
+    var vertSequences = [];
+
+    for (var col = 0; col < COLS_PER_LEVEL; col++) {
+
+      for (var row = 0; row < ROWS_PER_LEVEL - 2; row++) {
+
+        if (this._gemGrid[row][col].color === this._gemGrid[row + 1][col].color &&
+            this._gemGrid[row][col].color === this._gemGrid[row + 2][col].color) {
+
+          var sequence = [this._gemGrid[row][col]];
+
+          while (row + 1 < ROWS_PER_LEVEL && this._gemGrid[row][col].color === this._gemGrid[row + 1][col].color) {
+
+            row += 1;
+            sequence.push(this._gemGrid[row][col]);
+          }
+
+          vertSequences.push(sequence);
+        }
+      }
+    }
+
+    return vertSequences;
+  };
+
+  this.deleteSequences = function({ horizSequences, vertSequences }) {
+
+    for (var i = 0, seqNum = horizSequences.length; i < seqNum; i++) {
+
+      for (var j = 0, gemNum = horizSequences[i].length; j < gemNum; j++) {
+
+        var gem = horizSequences[i][j];
+
+        animate(gem)
+            .now({ width: 0, height: 0 })
+            .then(bind(this, function() {
+
+              this._gemGrid[gem.getGridPosition().row][gem.getGridPosition().col] = null;
+              this._gemPool.releaseView(gem);
+            }));
+      }
+    }
+
+    for (var i = 0, seqNum = vertSequences.length; i < seqNum; i++) {
+
+      for (var j = 0, gemNum = vertSequences[i].length; j < gemNum; j++) {
+
+        var gem = vertSequences[i][j];
+
+        animate(gem)
+            .now({ width: 0, height: 0 })
+            .then(bind(this, function() {
+
+              this._gemGrid[gem.getGridPosition().row][gem.getGridPosition().col] = null;
+              this._gemPool.releaseView(gem);
+            }));
+      }
+    }
   };
 
   this._generatePossibleSwapsList = function() {
