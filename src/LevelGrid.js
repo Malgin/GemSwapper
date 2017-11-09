@@ -12,6 +12,7 @@ const COLS_PER_LEVEL = 9;
 const DISTANCE_BETWEEN_GEMS = 5;
 const TOP_PADDING = 340;
 const LEFT_PADDING = 45;
+const SWAP_ANIMATION_DURATION = 300;
 
 exports = Class(function() {
 
@@ -153,8 +154,8 @@ exports = Class(function() {
     var origGemCoords = origGem.getOriginalPosition();
     var targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
 
-    animate(origGem, 'gem-swap-animation').now({x: targetGemCoords.x, y: targetGemCoords.y});
-    animate(targetGem, 'gem-swap-animation').now({x: origGemCoords.x, y: origGemCoords.y});
+    animate(origGem).now({x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_ANIMATION_DURATION);
+    animate(targetGem).now({x: origGemCoords.x, y: origGemCoords.y}, SWAP_ANIMATION_DURATION);
 
     var origGemGridPos = origGem.getGridPosition();
     var targetGemGridPos = targetGem.getGridPosition();
@@ -168,13 +169,6 @@ exports = Class(function() {
     this._gemGrid[origGemGridPos.row][origGemGridPos.col] = targetGem;
     this._gemGrid[targetGemGridPos.row][targetGemGridPos.col] = origGem;
 
-    /*animate.getGroup('gem-swap-animation').on('Finish', function() {
-
-      // emit event to animate scored gems
-    });*/
-
-    // update gems position in grid
-    // update grid with new gems
     this._generatePossibleSwapsList();
   };
 

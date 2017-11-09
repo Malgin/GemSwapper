@@ -1,10 +1,14 @@
 import math.geom.Point as Point;
 
+import animate;
+
 import ui.ImageView as ImageView;
 
 import src.managers.LevelManager as LevelManager;
 import src.LevelGrid as LevelGrid;
 import src.models.gem.Gem as Gem;
+
+const SWAP_FORBIDDEN_ANIMATION_DURATION = 50;
 
 exports = Class(ImageView, function(supr) {
 
@@ -64,11 +68,11 @@ exports = Class(ImageView, function(supr) {
 
         if (this._level.gemPresentToDirection(this._origGem, direction)) {
 
+          this._swapStarted = true;
+
           var targetGem = this._level.getTargetGem(this._origGem, direction);
 
           if (this._level.possibleSwapsContainsSwapFor(this._origGem, targetGem)) {
-
-            this._swapStarted = true;
 
             console.log(`direction is ${ direction }, delta is x: ${ delta.x }, y: ${ delta.y }`);
 
@@ -77,6 +81,20 @@ exports = Class(ImageView, function(supr) {
           } else {
 
             // play animation, and don't move gems
+            var origGemCoords = new Point(this._origGem.style.x, this._origGem.style.y);
+            var targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
+
+            animate(this._origGem)
+                .now({ x: origGemCoords.x - 2, y: origGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+                .then({ x: origGemCoords.x + 2, y: origGemCoords.y + 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+                .then({ x: origGemCoords.x - 2, y: origGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+                .then({ x: origGemCoords.x, y: origGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION);
+
+            animate(targetGem)
+                .now({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+                .then({ x: targetGemCoords.x + 2, y: targetGemCoords.y + 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+                .then({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+                .then({ x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION);
           }
         } else {
 
