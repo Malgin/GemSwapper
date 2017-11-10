@@ -15,7 +15,7 @@ const TOP_PADDING = 340;
 const LEFT_PADDING = 45;
 
 const SWAP_ANIMATION_DURATION = 300;
-const GEM_ANIMATION_LENGTH = 300;
+const GEM_ANIMATION_DURATION = 300;
 
 exports = Class(EventEmitter, function(supr) {
 
@@ -317,13 +317,15 @@ exports = Class(EventEmitter, function(supr) {
                 this._gemGrid[row][col] = trackGem;
                 trackGem.setGridPosition({ row, col });
 
+                let animationLength = (row - trackRow) * 300;
+
                 (bind(this, function(trackGem) {
 
                   animate(trackGem)
                       .now({
                         x: trackGem.getOriginalPosition().x,
                         y: TOP_PADDING + trackGem.getGridPosition().row * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT)
-                      }, 500, animate.easeOutBounce)
+                      }, animationLength, animate.easeOutBounce)
                       .then(bind(this, function() {
 
                         trackGem.setOriginalPosition(new Point(trackGem.style.x, trackGem.style.y));
@@ -345,9 +347,9 @@ exports = Class(EventEmitter, function(supr) {
 
           let gem = columnsOfNewGems[col][row];
 
-          let delay = 100 + (gemsLen - row) * GEM_ANIMATION_LENGTH;
+          let delayMultiplier = gemsLen - row;
 
-          this._animateNewGem(gem, delay);
+          this._animateNewGem(gem, delayMultiplier);
         }
       }
 
@@ -508,9 +510,11 @@ exports = Class(EventEmitter, function(supr) {
     return columnsOfGems;
   };
 
-  this._animateNewGem = function(gem, delay) {
+  this._animateNewGem = function(gem, delayMultiplier) {
 
-    let animationLength = GEM_ANIMATION_LENGTH * (gem.getGridPosition().row + 1);
+    let delay = 100 + delayMultiplier * GEM_ANIMATION_DURATION;
+
+    let animationLength = GEM_ANIMATION_DURATION * (gem.getGridPosition().row + 1);
 
     let xStartingPosition = LEFT_PADDING + gem.getGridPosition().col * (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH);
     let yStartingPosition = TOP_PADDING + (-0.5) * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
@@ -533,7 +537,7 @@ exports = Class(EventEmitter, function(supr) {
         .then({
           x: xFinalPosition,
           y: yFinalPosition
-        }, animationLength, animate.easeOutBounce)
+        }, animationLength, animate.easeOutExpo)
         .then(function() {
 
           gem.setOriginalPosition(new Point(gem.style.x, gem.style.y));
