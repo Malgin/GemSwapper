@@ -42,14 +42,14 @@ exports = Class(EventEmitter, function(supr) {
 
   this._build = function() {
 
-    for (var row = 0; row < ROWS_PER_LEVEL; row++) {
+    for (let row = 0; row < ROWS_PER_LEVEL; row++) {
 
       this._gemGrid[row] = [];
 
-      for (var col = 0; col < COLS_PER_LEVEL; col++) {
+      for (let col = 0; col < COLS_PER_LEVEL; col++) {
 
-        var xPosition = LEFT_PADDING + this._gemGrid[row].length * (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH);
-        var yPosition = TOP_PADDING + (this._gemGrid.length - 1) * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
+        let xPosition = LEFT_PADDING + this._gemGrid[row].length * (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH);
+        let yPosition = TOP_PADDING + (this._gemGrid.length - 1) * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
 
         let gemColor = null;
 
@@ -91,7 +91,7 @@ exports = Class(EventEmitter, function(supr) {
    */
   this.gemPresentToDirection = function(gem, direction) {
 
-    var gemGridPosition = gem.getGridPosition();
+    const gemGridPosition = gem.getGridPosition();
 
     switch(direction) {
       case exports.DIRECTION_LEFT:
@@ -117,8 +117,8 @@ exports = Class(EventEmitter, function(supr) {
 
   this.getGemByCoords = function(point) {
 
-    var gemCol = Math.ceil((point.x - LEFT_PADDING) / (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH)) - 1;
-    var gemRow = Math.ceil((point.y - TOP_PADDING) / (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT)) - 1;
+    let gemCol = Math.ceil((point.x - LEFT_PADDING) / (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH)) - 1;
+    let gemRow = Math.ceil((point.y - TOP_PADDING) / (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT)) - 1;
 
     console.log(`OrigGem row: ${gemRow}, col: ${gemCol}`);
 
@@ -131,8 +131,8 @@ exports = Class(EventEmitter, function(supr) {
    */
   this.getTargetGem = function(origGem, direction) {
 
-    var origGemGridPos = origGem.getGridPosition();
-    var targetGem = null;
+    const origGemGridPos = origGem.getGridPosition();
+    let targetGem = null;
 
     switch(direction) {
       case exports.DIRECTION_LEFT:
@@ -158,22 +158,19 @@ exports = Class(EventEmitter, function(supr) {
   this.swapGems = function(origGem, targetGem) {
 
     // change gems position with animation
-    var origGemCoords = origGem.getOriginalPosition();
-    var targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
+    const origGemCoords = origGem.getOriginalPosition();
+    let targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
 
     animate(origGem).now({x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_ANIMATION_DURATION);
     animate(targetGem)
         .now({x: origGemCoords.x, y: origGemCoords.y}, SWAP_ANIMATION_DURATION)
         .then(bind(this, function() {
 
-          this.deleteSequences({
-            horizSequences: this.detectHorizontalSequences(),
-            vertSequences: this.detectVerticalSequences()
-          });
+          this.emit('GemSwapComplete');
         }));
 
-    var origGemGridPos = origGem.getGridPosition();
-    var targetGemGridPos = targetGem.getGridPosition();
+    const origGemGridPos = origGem.getGridPosition();
+    const targetGemGridPos = targetGem.getGridPosition();
 
     origGem.setGridPosition(targetGemGridPos);
     targetGem.setGridPosition(origGemGridPos);
@@ -189,9 +186,9 @@ exports = Class(EventEmitter, function(supr) {
 
   this.swapPossibleFor = function(origGem, targetGem) {
 
-    for (var i = 0, length = this._possibleSwaps.length; i < length; i++) {
+    for (let i = 0, length = this._possibleSwaps.length; i < length; i++) {
 
-      var swap = this._possibleSwaps[i];
+      let swap = this._possibleSwaps[i];
 
       if ((swap[0] === origGem && swap[1] === targetGem) || (swap[1] === origGem && swap[0] === targetGem)) return true;
     }
@@ -201,17 +198,17 @@ exports = Class(EventEmitter, function(supr) {
 
   this.detectHorizontalSequences = function() {
 
-    var horizSequences = [];
+    const horizSequences = [];
 
     // detect horizontal sequences
-    for (var row = 0, rowsNum = this._gemGrid.length; row < rowsNum; row++) {
+    for (let row = 0, rowsNum = this._gemGrid.length; row < rowsNum; row++) {
 
-      for (var col = 0, colsNum = this._gemGrid[row].length; col < colsNum - 2; col++) {
+      for (let col = 0, colsNum = this._gemGrid[row].length; col < colsNum - 2; col++) {
 
         if (this._gemGrid[row][col].color === this._gemGrid[row][col + 1].color &&
             this._gemGrid[row][col].color === this._gemGrid[row][col + 2].color) {
 
-          var sequence = [this._gemGrid[row][col]];
+          let sequence = [this._gemGrid[row][col]];
 
           while (col + 1 < colsNum && this._gemGrid[row][col].color === this._gemGrid[row][col + 1].color) {
 
@@ -229,16 +226,16 @@ exports = Class(EventEmitter, function(supr) {
 
   this.detectVerticalSequences = function() {
 
-    var vertSequences = [];
+    const vertSequences = [];
 
-    for (var col = 0; col < COLS_PER_LEVEL; col++) {
+    for (let col = 0; col < COLS_PER_LEVEL; col++) {
 
-      for (var row = 0; row < ROWS_PER_LEVEL - 2; row++) {
+      for (let row = 0; row < ROWS_PER_LEVEL - 2; row++) {
 
         if (this._gemGrid[row][col].color === this._gemGrid[row + 1][col].color &&
             this._gemGrid[row][col].color === this._gemGrid[row + 2][col].color) {
 
-          var sequence = [this._gemGrid[row][col]];
+          let sequence = [this._gemGrid[row][col]];
 
           while (row + 1 < ROWS_PER_LEVEL && this._gemGrid[row][col].color === this._gemGrid[row + 1][col].color) {
 
@@ -256,39 +253,19 @@ exports = Class(EventEmitter, function(supr) {
 
   this.deleteSequences = function({ horizSequences, vertSequences }) {
 
-    for (var i = 0, seqNum = horizSequences.length; i < seqNum; i++) {
+    for (let i = 0, seqNum = horizSequences.length; i < seqNum; i++) {
 
-      for (var j = 0, gemNum = horizSequences[i].length; j < gemNum; j++) {
+      for (let j = 0, gemNum = horizSequences[i].length; j < gemNum; j++) {
 
-        var gem = horizSequences[i][j];
-
-        (bind(this, function(gem) {
-
-          animate(gem, 'GemDestroy')
-              .now({ width: 0, height: 0 })
-              .then(bind(this, function() {
-
-                this._releaseGem(gem)
-              }));
-        })(gem));
+        this._animateDestroyGem(horizSequences[i][j]);
       }
     }
 
-    for (var i = 0, seqNum = vertSequences.length; i < seqNum; i++) {
+    for (let i = 0, seqNum = vertSequences.length; i < seqNum; i++) {
 
-      for (var j = 0, gemNum = vertSequences[i].length; j < gemNum; j++) {
+      for (let j = 0, gemNum = vertSequences[i].length; j < gemNum; j++) {
 
-        var gem = vertSequences[i][j];
-
-        (bind(this, function(gem) {
-
-          animate(gem, 'GemDestroy')
-              .now({ width: 0, height: 0 })
-              .then(bind(this, function() {
-
-                this._releaseGem(gem);
-              }));
-        })(gem));
+        this._animateDestroyGem(vertSequences[i][j]);
       }
     }
 
@@ -339,11 +316,11 @@ exports = Class(EventEmitter, function(supr) {
 
       // generate new gems and fall them from the sky
       let columnsOfNewGems = this._generateNewGems();
+
       // animate new gems
       for (let col = 0, colsLen = columnsOfNewGems.length; col < colsLen; col++) {
 
         for (let gemsLen = columnsOfNewGems[col].length, row = gemsLen - 1; row >= 0; row--) {
-        // for (let gemsLen = columnsOfNewGems[col].length, row = 0; row < gemsLen; row++) {
 
           let gem = columnsOfNewGems[col][row];
 
@@ -362,11 +339,11 @@ exports = Class(EventEmitter, function(supr) {
 
   this._generatePossibleSwapsList = function() {
 
-    var gem = null;
+    let gem = null;
 
-    for (var row = 0; row < this._gemGrid.length; row++) {
+    for (let row = 0; row < this._gemGrid.length; row++) {
 
-      for (var col = 0; col < this._gemGrid[row].length; col++) {
+      for (let col = 0; col < this._gemGrid[row].length; col++) {
 
         gem = this._gemGrid[row][col];
 
@@ -413,10 +390,10 @@ exports = Class(EventEmitter, function(supr) {
 
   this._hasSequenceAtRowAndCol = function(row, col) {
 
-    var gem = this._gemGrid[row][col];
-    var curCheckRow = null;
-    var curCheckCol = null;
-    var sequenceLength = 1;
+    const gem = this._gemGrid[row][col];
+    let curCheckRow = null;
+    let curCheckCol = null;
+    let sequenceLength = 1;
 
     // go left and check for a sequence
     curCheckRow = row;
@@ -473,11 +450,11 @@ exports = Class(EventEmitter, function(supr) {
     let columnsOfGems = [];
     let prevGemColor = null;
 
-    for (var col = 0; col < COLS_PER_LEVEL; col++) {
+    for (let col = 0; col < COLS_PER_LEVEL; col++) {
 
       let columnOfGems = [];
 
-      for (var row = 0; row < ROWS_PER_LEVEL; row++) {
+      for (let row = 0; row < ROWS_PER_LEVEL; row++) {
 
         if (this._gemGrid[row][col] !== null) break;
 
@@ -510,6 +487,16 @@ exports = Class(EventEmitter, function(supr) {
     return columnsOfGems;
   };
 
+  this._animateDestroyGem = function(gem) {
+
+    animate(gem, 'GemDestroy')
+        .now({ width: 0, height: 0 })
+        .then(bind(this, function() {
+
+          this._releaseGem(gem);
+        }));
+  };
+
   this._animateNewGem = function(gem, delayMultiplier) {
 
     let delay = 100 + delayMultiplier * GEM_ANIMATION_DURATION;
@@ -523,7 +510,7 @@ exports = Class(EventEmitter, function(supr) {
     let yFinalPosition = TOP_PADDING + gem.getGridPosition().row * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
 
     // properly animate gem
-    animate(gem, 'GemSpawn')
+    return animate(gem, 'GemSpawn')
         .wait(delay)
         .then(bind(this, function() {
 

@@ -111,6 +111,19 @@ exports = Class(ImageView, function(supr) {
       this._dragStarted = false;
       this._uesrInteractionStopped = false;
     }));
+
+    this._level.on('GemSwapComplete', bind(this, function() {
+
+      this._level.deleteSequences({
+        horizSequences: this._level.detectHorizontalSequences(),
+        vertSequences: this._level.detectVerticalSequences()
+      });
+    }));
+
+    this._level.on('DeleteSequencesComplete', bind(this, function() {
+
+
+    }));
   };
 
   this._getDragDirection = function(dragDelta) {
