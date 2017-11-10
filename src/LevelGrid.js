@@ -13,7 +13,9 @@ const COLS_PER_LEVEL = 9;
 const DISTANCE_BETWEEN_GEMS = 5;
 const TOP_PADDING = 340;
 const LEFT_PADDING = 45;
+
 const SWAP_ANIMATION_DURATION = 300;
+const GEM_ANIMATION_LENGTH = 300;
 
 exports = Class(EventEmitter, function(supr) {
 
@@ -321,7 +323,7 @@ exports = Class(EventEmitter, function(supr) {
                       .now({
                         x: trackGem.getOriginalPosition().x,
                         y: TOP_PADDING + trackGem.getGridPosition().row * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT)
-                      })
+                      }, 500, animate.easeOutBounce)
                       .then(bind(this, function() {
 
                         trackGem.setOriginalPosition(new Point(trackGem.style.x, trackGem.style.y));
@@ -343,7 +345,7 @@ exports = Class(EventEmitter, function(supr) {
 
           let gem = columnsOfNewGems[col][row];
 
-          let delay = 100 + (gemsLen - row) * 500;
+          let delay = 100 + (gemsLen - row) * GEM_ANIMATION_LENGTH;
 
           this._animateNewGem(gem, delay);
         }
@@ -508,7 +510,7 @@ exports = Class(EventEmitter, function(supr) {
 
   this._animateNewGem = function(gem, delay) {
 
-    let animationLength = 500 * (gem.getGridPosition().row + 1);
+    let animationLength = GEM_ANIMATION_LENGTH * (gem.getGridPosition().row + 1);
 
     let xStartingPosition = LEFT_PADDING + gem.getGridPosition().col * (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH);
     let yStartingPosition = TOP_PADDING + (-0.5) * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
@@ -531,7 +533,7 @@ exports = Class(EventEmitter, function(supr) {
         .then({
           x: xFinalPosition,
           y: yFinalPosition
-        }, animationLength)
+        }, animationLength, animate.easeOutBounce)
         .then(function() {
 
           gem.setOriginalPosition(new Point(gem.style.x, gem.style.y));
