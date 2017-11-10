@@ -17,7 +17,7 @@ exports = Class(ImageView, function(supr) {
     this._levelManager = null;
     this.level = null;
     this._dragStarted = false;
-    this._uesrInteractionStopped = false;
+    this._userInteractionStopped = false;
     this._dragStartCoords = null;
 
     this.width = opts.width;
@@ -57,7 +57,7 @@ exports = Class(ImageView, function(supr) {
 
     this.on('InputMove', bind(this, function(event, point) {
 
-      if (!this._dragStarted || this._uesrInteractionStopped) return;
+      if (!this._dragStarted || this._userInteractionStopped) return;
 
       console.log('Input moved!!');
 
@@ -70,7 +70,7 @@ exports = Class(ImageView, function(supr) {
 
         if (this._level.gemPresentToDirection(this._origGem, direction)) {
 
-          this._uesrInteractionStopped = true;
+          this._userInteractionStopped = true;
 
           var targetGem = this._level.getTargetGem(this._origGem, direction);
 
@@ -95,7 +95,11 @@ exports = Class(ImageView, function(supr) {
                 .now({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
                 .then({ x: targetGemCoords.x + 2, y: targetGemCoords.y + 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
                 .then({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
-                .then({ x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION);
+                .then({ x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+                .then(bind(this, function() {
+
+                  this._userInteractionStopped = false;
+                }));
           }
         }
       } else {
@@ -109,7 +113,7 @@ exports = Class(ImageView, function(supr) {
       console.log('Input ended!!!');
 
       this._dragStarted = false;
-      this._uesrInteractionStopped = false;
+      this._userInteractionStopped = false;
     }));
 
     this._level.on('GemSwapComplete', bind(this, function() {
@@ -122,7 +126,24 @@ exports = Class(ImageView, function(supr) {
 
     this._level.on('DeleteSequencesComplete', bind(this, function() {
 
+      this._level.detectGapsAndMoveUpperGems();
+    }));
 
+    this._level.on('GapsDetectionComplete', bind(this, function() {
+
+      this._level.spawnNewGems();
+    }));
+
+    this._level.on('GemSpawnComplete', bind(this, function() {
+
+      if (this._level.hasDeletableSequences()) {
+        this._level.deleteSequences({
+          horizSequences: this._level.detectHorizontalSequences(),
+          vertSequences: this._level.detectVerticalSequences()
+        });
+      } else {
+        this._userInteractionStopped = false;
+      }
     }));
   };
 

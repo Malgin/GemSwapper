@@ -180,8 +180,6 @@ exports = Class(EventEmitter, function(supr) {
 
     this._gemGrid[origGemGridPos.row][origGemGridPos.col] = targetGem;
     this._gemGrid[targetGemGridPos.row][targetGemGridPos.col] = origGem;
-
-    this._generatePossibleSwapsList();
   };
 
   this.swapPossibleFor = function(origGem, targetGem) {
@@ -194,6 +192,14 @@ exports = Class(EventEmitter, function(supr) {
     }
 
     return false;
+  };
+
+  this.hasDeletableSequences = function() {
+
+    const horizSequences = this.detectHorizontalSequences();
+    const vertSequences = this.detectVerticalSequences();
+
+    return horizSequences.length > 0 || vertSequences.length > 0;
   };
 
   this.detectHorizontalSequences = function() {
@@ -253,11 +259,13 @@ exports = Class(EventEmitter, function(supr) {
 
   this.deleteSequences = function({ horizSequences, vertSequences }) {
 
+    let animator = null;
+
     for (let i = 0, seqNum = horizSequences.length; i < seqNum; i++) {
 
       for (let j = 0, gemNum = horizSequences[i].length; j < gemNum; j++) {
 
-        this._animateDestroyGem(horizSequences[i][j]);
+        animator = this._animateDestroyGem(horizSequences[i][j]);
       }
     }
 
@@ -265,75 +273,90 @@ exports = Class(EventEmitter, function(supr) {
 
       for (let j = 0, gemNum = vertSequences[i].length; j < gemNum; j++) {
 
-        this._animateDestroyGem(vertSequences[i][j]);
+        animator = this._animateDestroyGem(vertSequences[i][j]);
       }
     }
 
-    animate.getGroup('GemDestroy').on('Finish', bind(this, function() {
+    if (animator !== null) {
 
-      // detect gaps and fill them
-      for (let row = this._gemGrid.length - 1; row >= 0; row--) {
+      // deleted at least one gem
+      animator.then(bind(this, function() {
 
-        for (let col = this._gemGrid[row].length - 1; col >= 0; col--) {
+        this.emit('DeleteSequencesComplete');
+      }));
+    }
+  };
 
-          const gem = this._gemGrid[row][col];
+  this.detectGapsAndMoveUpperGems = function() {
 
-          if (row > 0 && gem === null) {
+    let animator = null;
 
-            // go up until you find any gem or hit ceiling
-            let trackRow = row;
-            let trackGem = null;
+    for (let row = this._gemGrid.length - 1; row >= 0; row--) {
 
-            while (--trackRow >= 0 && trackGem === null) {
+      for (let col = this._gemGrid[row].length - 1; col >= 0; col--) {
 
-              trackGem = this._gemGrid[trackRow][col];
+        const gem = this._gemGrid[row][col];
 
-              if (trackGem !== null) {
+        if (row > 0 && gem === null) {
 
-                this._gemGrid[trackGem.getGridPosition().row][trackGem.getGridPosition().col] = null;
-                this._gemGrid[row][col] = trackGem;
-                trackGem.setGridPosition({ row, col });
+          // go up until you find any gem or hit ceiling
+          let trackRow = row;
+          let trackGem = null;
 
-                let animationLength = (row - trackRow) * 300;
+          while (--trackRow >= 0 && trackGem === null) {
 
-                (bind(this, function(trackGem) {
+            trackGem = this._gemGrid[trackRow][col];
 
-                  animate(trackGem)
-                      .now({
-                        x: trackGem.getOriginalPosition().x,
-                        y: TOP_PADDING + trackGem.getGridPosition().row * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT)
-                      }, animationLength, animate.easeOutBounce)
-                      .then(bind(this, function() {
+            if (trackGem !== null) {
 
-                        trackGem.setOriginalPosition(new Point(trackGem.style.x, trackGem.style.y));
-                      }));
-                })(trackGem));
-              }
+              // update gem position in grid
+              this._gemGrid[trackGem.getGridPosition().row][trackGem.getGridPosition().col] = null;
+              this._gemGrid[row][col] = trackGem;
+              trackGem.setGridPosition({ row, col });
+
+              let animationLength = (row - trackRow) * 300;
+
+              animator = this._animateFallingGem(trackGem, animationLength);
             }
           }
         }
       }
+    }
 
-      // generate new gems and fall them from the sky
-      let columnsOfNewGems = this._generateNewGems();
+    if (animator !== null) {
+      animator.then(bind(this, function() {
 
-      // animate new gems
-      for (let col = 0, colsLen = columnsOfNewGems.length; col < colsLen; col++) {
-
-        for (let gemsLen = columnsOfNewGems[col].length, row = gemsLen - 1; row >= 0; row--) {
-
-          let gem = columnsOfNewGems[col][row];
-
-          let delayMultiplier = gemsLen - row;
-
-          this._animateNewGem(gem, delayMultiplier);
-        }
-      }
-
-      animate.getGroup('GemSpawn').on('Finish', bind(this, function() {
-
-        this._generatePossibleSwapsList();
+        this.emit('GapsDetectionComplete');
       }));
+    } else {
+      this.emit('GapsDetectionComplete');
+    }
+  };
+
+  this.spawnNewGems = function() {
+
+    // generate new gems and fall them from the sky
+    let columnsOfNewGems = this._generateNewGems();
+
+    let animator = null;
+
+    // animate new gems
+    for (let col = 0, colsLen = columnsOfNewGems.length; col < colsLen; col++) {
+
+      for (let gemsLen = columnsOfNewGems[col].length, row = gemsLen - 1; row >= 0; row--) {
+
+        let gem = columnsOfNewGems[col][row];
+
+        let delayMultiplier = gemsLen - row;
+
+        animator = this._animateNewGem(gem, delayMultiplier);
+      }
+    }
+
+    animator.then(bind(this, function() {
+
+      this._generatePossibleSwapsList();
+      this.emit('GemSpawnComplete');
     }));
   };
 
@@ -489,11 +512,24 @@ exports = Class(EventEmitter, function(supr) {
 
   this._animateDestroyGem = function(gem) {
 
-    animate(gem, 'GemDestroy')
+    return animate(gem, 'GemDestroy')
         .now({ width: 0, height: 0 })
         .then(bind(this, function() {
 
           this._releaseGem(gem);
+        }));
+  };
+
+  this._animateFallingGem = function(gem, animationLength) {
+
+    return animate(gem)
+        .now({
+          x: gem.getOriginalPosition().x,
+          y: TOP_PADDING + gem.getGridPosition().row * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT)
+        }, animationLength, animate.easeOutBounce)
+        .then(bind(this, function() {
+
+          gem.setOriginalPosition(new Point(gem.style.x, gem.style.y));
         }));
   };
 
@@ -510,7 +546,7 @@ exports = Class(EventEmitter, function(supr) {
     let yFinalPosition = TOP_PADDING + gem.getGridPosition().row * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
 
     // properly animate gem
-    return animate(gem, 'GemSpawn')
+    return animate(gem)
         .wait(delay)
         .then(bind(this, function() {
 
