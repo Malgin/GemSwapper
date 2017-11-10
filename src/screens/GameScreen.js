@@ -42,6 +42,8 @@ exports = Class(ImageView, function(supr) {
     // init first level
     this._level = this._levelManager.initLevel();
 
+
+
     // TODO init scores manager
 
     this.on('InputStart', bind(this, function(event, point) {
@@ -126,6 +128,6 @@ exports = Class(ImageView, function(supr) {
 
   this._movedFarEnough = function(delta) {
 
-    return Math.abs(delta.x) >= Gem.GEM_WIDTH || Math.abs(delta.y) >= Gem.GEM_HEIGHT;
+    return Math.abs(delta.x) >= Gem.GEM_WIDTH / 2 || Math.abs(delta.y) >= Gem.GEM_HEIGHT / 2;
   };
 });

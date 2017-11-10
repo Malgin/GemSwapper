@@ -49,19 +49,21 @@ exports = Class(EventEmitter, function(supr) {
         var xPosition = LEFT_PADDING + this._gemGrid[row].length * (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH);
         var yPosition = TOP_PADDING + (this._gemGrid.length - 1) * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
 
-        // TODO obtain gem without creating chains of 3+ gems
+        let gemColor = null;
+
         do {
 
-          var gem = this._gemPool.obtainGem(this._gemColors[Math.floor(Math.random() * this._gemColors.length + 1)]);
+          gemColor = this._gemColors[Math.floor(Math.random() * this._gemColors.length)];
         } while (
             (row >= 2 &&
-            this._gemGrid[row - 1][col].color === gem.color &&
-            this._gemGrid[row - 2][col].color === gem.color) ||
+            this._gemGrid[row - 1][col].color === gemColor &&
+            this._gemGrid[row - 2][col].color === gemColor) ||
             (col >= 2 &&
-            this._gemGrid[row][col - 1].color === gem.color &&
-            this._gemGrid[row][col - 2].color === gem.color)
+            this._gemGrid[row][col - 1].color === gemColor &&
+            this._gemGrid[row][col - 2].color === gemColor)
         );
 
+        let gem = this._gemPool.obtainGem(gemColor);
 
         gem.updateOpts({
           superview: this._container,
@@ -330,6 +332,27 @@ exports = Class(EventEmitter, function(supr) {
           }
         }
       }
+
+      // generate new gems and fall them from the sky
+      let columnsOfNewGems = this._generateNewGems();
+      // animate new gems
+      for (let col = 0, colsLen = columnsOfNewGems.length; col < colsLen; col++) {
+
+        for (let gemsLen = columnsOfNewGems[col].length, row = gemsLen - 1; row >= 0; row--) {
+        // for (let gemsLen = columnsOfNewGems[col].length, row = 0; row < gemsLen; row++) {
+
+          let gem = columnsOfNewGems[col][row];
+
+          let delay = 100 + (gemsLen - row) * 500;
+
+          this._animateNewGem(gem, delay);
+        }
+      }
+
+      animate.getGroup('GemSpawn').on('Finish', bind(this, function() {
+
+        this._generatePossibleSwapsList();
+      }));
     }));
   };
 
@@ -343,7 +366,7 @@ exports = Class(EventEmitter, function(supr) {
 
         gem = this._gemGrid[row][col];
 
-        if (row != this._gemGrid.length - 1) {
+        if (row !== this._gemGrid.length - 1) {
 
           // not the last row, so checking if we'll get hit after swapping gem with the one below it
           // "phantom" swap gems
@@ -362,7 +385,7 @@ exports = Class(EventEmitter, function(supr) {
           this._gemGrid[row][col] = gem;
         }
 
-        if (col != this._gemGrid[row].length - 1) {
+        if (col !== this._gemGrid[row].length - 1) {
 
           // not the last one col, so checking if we'll get hit after swapping gem with the one to the right
           // "phantom" swap gems
@@ -439,6 +462,80 @@ exports = Class(EventEmitter, function(supr) {
 
       this._gemGrid[gem.getGridPosition().row][gem.getGridPosition().col] = null;
       this._gemPool.releaseView(gem);
+  };
+
+  this._generateNewGems = function() {
+
+    let columnsOfGems = [];
+    let prevGemColor = null;
+
+    for (var col = 0; col < COLS_PER_LEVEL; col++) {
+
+      let columnOfGems = [];
+
+      for (var row = 0; row < ROWS_PER_LEVEL; row++) {
+
+        if (this._gemGrid[row][col] !== null) break;
+
+        let newGem = null;
+        let gemColor = null;
+
+        do {
+
+          gemColor = this._gemColors[Math.floor(Math.random() * this._gemColors.length + 1)];
+        } while (gemColor === prevGemColor);
+
+        prevGemColor = gemColor;
+
+        newGem = this._gemPool.obtainGem(gemColor);
+
+        newGem.updateOpts({
+          superview: this._container
+        });
+
+        newGem.setGridPosition({ row, col });
+
+        this._gemGrid[row][col] = newGem;
+
+        columnOfGems.push(newGem);
+      }
+
+      columnsOfGems.push(columnOfGems);
+    }
+
+    return columnsOfGems;
+  };
+
+  this._animateNewGem = function(gem, delay) {
+
+    let animationLength = 500 * (gem.getGridPosition().row + 1);
+
+    let xStartingPosition = LEFT_PADDING + gem.getGridPosition().col * (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH);
+    let yStartingPosition = TOP_PADDING + (-0.5) * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
+
+    let xFinalPosition = LEFT_PADDING + gem.getGridPosition().col * (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH);
+    let yFinalPosition = TOP_PADDING + gem.getGridPosition().row * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
+
+    // properly animate gem
+    animate(gem, 'GemSpawn')
+        .wait(delay)
+        .then(bind(this, function() {
+
+          // put gem at starting position of animation
+          gem.updateOpts({
+            visible: true,
+            x: xStartingPosition,
+            y: yStartingPosition
+          })
+        }))
+        .then({
+          x: xFinalPosition,
+          y: yFinalPosition
+        }, animationLength)
+        .then(function() {
+
+          gem.setOriginalPosition(new Point(gem.style.x, gem.style.y));
+        });
   };
 });
 

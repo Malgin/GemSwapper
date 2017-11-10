@@ -25,8 +25,11 @@ exports = Class(ViewPool, function(supr) {
     var gem = this.obtainView();
 
     gem.updateOpts({
+      width: Gem.GEM_WIDTH,
+      height: Gem.GEM_HEIGHT,
       color: color,
-      image: `resources/images/gems/${color}.png`
+      image: `resources/images/gems/${color}.png`,
+      visible: false
     });
 
     return gem;
