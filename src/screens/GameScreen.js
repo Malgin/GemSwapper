@@ -27,6 +27,8 @@ exports = Class(ImageView, function(supr) {
     this._clueTimer = null;
     this._clueSwapGems = null;
 
+    this._forbiddenSwapTimer = null;
+
     this.width = opts.width;
     this.height = opts.height;
 
@@ -45,7 +47,8 @@ exports = Class(ImageView, function(supr) {
       superview: this,
       width: 1,
       height: 1,
-      initCount: 100
+      initCount: 100,
+      zIndex: 1000
     });
 
     // init level manager
@@ -97,28 +100,22 @@ exports = Class(ImageView, function(supr) {
             this._level.swapGems(this._origGem, targetGem);
           } else {
 
-            // play animation, and don't move gems
+            // swap is forbidden, play animation, and don't move gems
             var origGemCoords = new Point(this._origGem.style.x, this._origGem.style.y);
             var targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
 
             animate(this._origGem)
-                .now({ x: origGemCoords.x - 2, y: origGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+                .now ({ x: origGemCoords.x - 2, y: origGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
                 .then({ x: origGemCoords.x + 2, y: origGemCoords.y + 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
                 .then({ x: origGemCoords.x - 2, y: origGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
                 .then({ x: origGemCoords.x, y: origGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION);
 
             animate(targetGem)
-                .now({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+                .now ({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
                 .then({ x: targetGemCoords.x + 2, y: targetGemCoords.y + 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
                 .then({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
                 .then({ x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION)
-                .then(bind(this, function() {
-
-                  if (!this._dragStarted) {
-
-                    this._userInteractionStopped = false;
-                  }
-                }));
+                .then(bind(this, this._enableUserInteraction));
           }
         }
       }
@@ -129,7 +126,6 @@ exports = Class(ImageView, function(supr) {
       console.log('Input ended!!!');
 
       this._dragStarted = false;
-      this._userInteractionStopped = false;
     }));
 
     this._level.on('GemSwapComplete', bind(this, function() {
@@ -153,13 +149,14 @@ exports = Class(ImageView, function(supr) {
         pObj.x = gem.style.x;
         pObj.y = gem.style.y;
 
-        pObj.dx = Math.random() * -100;
-        pObj.dy = Math.random() * -100;
+        pObj.dx = Math.random() * -100 * (Math.random() > 0.5 ? 1 : -1);
+        pObj.dy = Math.random() * -100 * (Math.random() > 0.5 ? 1 : -1);
         pObj.ttl = 500;
-        pObj.ddy = 50;
+        // pObj.ddy = 50;
+        pObj.opacity = 1;
+        pObj.dopacity = -1;
         pObj.width = 50;
         pObj.height = 50;
-        pObj.zIndex = 1000;
         pObj.image = `resources/images/particles/gleam_${ gem.color }.png`;
       }
 
@@ -188,7 +185,7 @@ exports = Class(ImageView, function(supr) {
         });
       } else {
 
-        this._userInteractionStopped = false;
+        this._enableUserInteraction();
 
         if (this._initialClueTimer === null && this._clueTimer === null) {
 
@@ -281,5 +278,22 @@ exports = Class(ImageView, function(supr) {
     this._initialClueTimer = null;
     this._clueTimer = null;
     this._clueSwapGems = null;
-  }
+  };
+
+  this._enableUserInteraction = function() {
+
+    this._forbiddenSwapTimer = setTimeout(bind(this, function enableUserInteraction() {
+
+      if (!this._dragStarted) {
+
+        // unblock user interaction if user stopped dragging
+        this._userInteractionStopped = false;
+        clearInterval(this._forbiddenSwapTimer);
+      } else {
+
+        // renew the check if uesr is still dragging
+        this._forbiddenSwapTimer = setTimeout(bind(this, enableUserInteraction, 100));
+      }
+    }), 100);
+  };
 });
