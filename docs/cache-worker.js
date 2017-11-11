@@ -94,7 +94,7 @@ console.log('cache-worker starting at', location.toString());
 
 var APP_ID = 'e3cc258a2fac405aabadc39e0b1dc299';
 
-var APP_VERSION = '';
+var APP_VERSION = 'debug';
 
 var ALLOW_MULTIPLE_APPS_PER_DOMAIN = true;
 
@@ -107,7 +107,7 @@ var CACHE_NAME = CACHE_NAME_APP_PREFIX + APP_VERSION;
 // these are URLs we've already loaded by the time the worker is running, just
 // cache these explicitly
 var BASE_URLS = [
-  'index.html','browser-desktop.js'
+  'index.html','native-ios.js'
 ];
 
 var hostURL = location;
