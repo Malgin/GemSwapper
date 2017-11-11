@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>GemSwapper</title>
+  </head>
+
+  <body style="margin:0;padding:0;" onresize="onResize()">
+    <div id="gameWrapper">
+      <iframe id="game" src="game.html"style="display:block;border:0;margin:0;padding:0;">
+      </iframe>
+    </div>
+
+    <script>
+      function onResize(allowResize) {
+        var w = window, d = w.document, de = d.documentElement;
+        var width = Math.max(de.clientWidth, w.innerWidth || 0);
+        var height = Math.max(de.clientHeight, w.innerHeight || 0);
+        var game = d.getElementById("game");
+
+        if (allowResize) {
+          var BG_WIDTH = 320;
+          var BG_HEIGHT = 480;
+          var BG_RATIO = BG_WIDTH / BG_HEIGHT;
+          var ratio = width / height;
+          var horzFit = ratio <= BG_RATIO;
+          var scale = horzFit
+                    ? width / BG_WIDTH
+                    : height / BG_HEIGHT;
+
+          game.width = scale * BG_WIDTH;
+          game.height = scale * BG_HEIGHT;
+
+          if (game.width > BG_WIDTH) {
+            game.height *= BG_WIDTH / game.width;
+            game.width = BG_WIDTH;
+          }
+
+          if (game.height > BG_HEIGHT) {
+            game.width *= BG_HEIGHT / game.height;
+            game.height = BG_HEIGHT;
+          }
+        }
+
+        var gameWrapper = document.getElementById("gameWrapper");
+        var s = gameWrapper.style;
+        s.width = "1px";
+        s.height = "1px";
+        s.marginTop = ((height - game.height) / 2) + "px";
+        s.marginLeft = ((width - game.width) / 2) + "px";
+      };
+
+      onResize(true);
+    </script>
+  </body>
+</html>
