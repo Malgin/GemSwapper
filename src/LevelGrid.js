@@ -14,8 +14,9 @@ const DISTANCE_BETWEEN_GEMS = 5;
 const TOP_PADDING = 340;
 const LEFT_PADDING = 45;
 
-const SWAP_ANIMATION_DURATION = 300;
-const GEM_ANIMATION_DURATION = 300;
+const GEM_SWAP_ANIMATION_DURATION = 300;
+const GEM_BASE_ANIMATION_DURATION = 150;
+const GEM_FALLING_ANIMATION_DURATION = 100;
 
 exports = Class(EventEmitter, function(supr) {
 
@@ -168,9 +169,9 @@ exports = Class(EventEmitter, function(supr) {
     const origGemCoords = new Point(origGem.style.x, origGem.style.y);
     const targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
 
-    animate(origGem).now({x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_ANIMATION_DURATION);
+    animate(origGem).now({x: targetGemCoords.x, y: targetGemCoords.y}, GEM_SWAP_ANIMATION_DURATION);
     animate(targetGem)
-        .now({x: origGemCoords.x, y: origGemCoords.y}, SWAP_ANIMATION_DURATION)
+        .now({x: origGemCoords.x, y: origGemCoords.y}, GEM_SWAP_ANIMATION_DURATION)
         .then(bind(this, function() {
 
           this.emit('GemSwapComplete');
@@ -302,7 +303,7 @@ exports = Class(EventEmitter, function(supr) {
               this._gemGrid[row][col] = trackGem;
               trackGem.setGridPosition({ row, col });
 
-              let animationLength = (row - trackRow) * 300;
+              let animationLength = (row - trackRow) * GEM_FALLING_ANIMATION_DURATION;
 
               animator = this._animateFallingGem(trackGem, animationLength);
             }
@@ -337,9 +338,9 @@ exports = Class(EventEmitter, function(supr) {
 
         let gem = columnsOfNewGems[col][row];
 
-        let animationDelay = 100 + (gemsLen - row) * GEM_ANIMATION_DURATION;
+        let animationDelay = 100 + (gemsLen - row) * GEM_BASE_ANIMATION_DURATION;
 
-        let animationLength = GEM_ANIMATION_DURATION * (gem.getGridPosition().row + 1);
+        let animationLength = GEM_BASE_ANIMATION_DURATION * (gem.getGridPosition().row + 1);
 
         if (longestAnimationTime < animationDelay + animationLength) {
 
