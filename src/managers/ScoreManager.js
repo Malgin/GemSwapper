@@ -31,9 +31,7 @@ exports = Class(function() {
       image: 'resources/images/ui/header.png'
     });
 
-    animate(scoreView).now({
-      y: 0
-    });
+    animate(scoreView).now({ y: 0 });
 
     this._scoreTextView = new TextView({
       superview: scoreView,

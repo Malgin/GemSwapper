@@ -22,7 +22,7 @@ exports = Class(ImageView, function(supr) {
     this._levelManager = null;
     this._level = null;
     this._dragStarted = false;
-    this._userInteractionStopped = false;
+    this._userInteractionStopped = true;
     this._dragStartCoords = null;
 
     this._initialClueTimer = null;
@@ -65,9 +65,11 @@ exports = Class(ImageView, function(supr) {
     // init first level
     this._level = this._levelManager.initLevel();
 
-    this._fireUpClueAnimation();
+    this._level.on('BuildLevelFinished', bind(this, function() {
 
-    // TODO init scores manager
+      this._enableUserInteraction();
+      this._fireUpClueAnimation();
+    }));
 
     this.on('InputStart', bind(this, function(event, point) {
 

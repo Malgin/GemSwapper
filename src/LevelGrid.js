@@ -43,14 +43,14 @@ exports = Class(EventEmitter, function(supr) {
 
   this._build = function() {
 
-    for (let row = 0; row < ROWS_PER_LEVEL; row++) {
+    let longestAnimationTime = 0;
+    let animator = null;
+
+    for (let row = ROWS_PER_LEVEL - 1; row >= 0; row--) {
 
       this._gemGrid[row] = [];
 
       for (let col = 0; col < COLS_PER_LEVEL; col++) {
-
-        let xPosition = LEFT_PADDING + this._gemGrid[row].length * (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH);
-        let yPosition = TOP_PADDING + (this._gemGrid.length - 1) * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
 
         let gemColor = null;
 
@@ -58,9 +58,9 @@ exports = Class(EventEmitter, function(supr) {
 
           gemColor = this._gemColors[Math.floor(Math.random() * this._gemColors.length)];
         } while (
-            (row >= 2 &&
-            this._gemGrid[row - 1][col].color === gemColor &&
-            this._gemGrid[row - 2][col].color === gemColor) ||
+            (row < ROWS_PER_LEVEL - 2 &&
+            this._gemGrid[row + 1][col].color === gemColor &&
+            this._gemGrid[row + 2][col].color === gemColor) ||
             (col >= 2 &&
             this._gemGrid[row][col - 1].color === gemColor &&
             this._gemGrid[row][col - 2].color === gemColor)
@@ -69,19 +69,34 @@ exports = Class(EventEmitter, function(supr) {
         let gem = this._gemPool.obtainGem(gemColor);
 
         gem.updateOpts({
-          superview: this._container,
-          x: xPosition,
-          y: yPosition,
-          visible: true
+          superview: this._container
         });
 
         gem.setGridPosition({ row, col });
 
         this._gemGrid[row][col] = gem;
+
+        let animationDelay = 100 + (ROWS_PER_LEVEL - row - 1) * GEM_BASE_ANIMATION_DURATION;
+        let animationLength = GEM_BASE_ANIMATION_DURATION * (gem.getGridPosition().row + 1);
+
+        if (longestAnimationTime < animationDelay + animationLength) {
+
+          longestAnimationTime = animationDelay + animationLength;
+          animator = this._animateNewGem(gem, animationDelay, animationLength);
+        } else {
+
+          this._animateNewGem(gem, animationDelay, animationLength);
+
+          animate(gem);
+        }
       }
     }
 
-    this._generatePossibleSwapsList();
+    animator.then(bind(this, function() {
+
+      this._generatePossibleSwapsList();
+      this.emit('BuildLevelFinished');
+    }));
   };
 
   /**
@@ -536,7 +551,6 @@ exports = Class(EventEmitter, function(supr) {
     let xFinalPosition = LEFT_PADDING + gem.getGridPosition().col * (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH);
     let yFinalPosition = TOP_PADDING + gem.getGridPosition().row * (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT);
 
-    // properly animate gem
     return animate(gem)
         .wait(animationDelay)
         .then(bind(this, function() {
