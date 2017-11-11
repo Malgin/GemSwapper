@@ -11,7 +11,7 @@ import src.LevelGrid as LevelGrid;
 import src.models.gem.Gem as Gem;
 
 const SWAP_FORBIDDEN_ANIMATION_DURATION = 50;
-const SWAP_CLUE_ANIMATION_DURATION = 400;
+const SWAP_CLUE_ANIMATION_DURATION = 600;
 
 exports = Class(ImageView, function(supr) {
 
@@ -226,7 +226,7 @@ exports = Class(ImageView, function(supr) {
     // start timer for a clue on swapping gems
     this._initialClueTimer = setTimeout(bind(this, function() {
 
-      this._clueTimer = setInterval(bind(this, this._animateClue), SWAP_CLUE_ANIMATION_DURATION + 100);
+      this._clueTimer = setInterval(bind(this, this._animateClue), SWAP_CLUE_ANIMATION_DURATION + 200);
     }), 3000);
   };
 
