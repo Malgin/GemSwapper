@@ -66,8 +66,6 @@ exports = Class(ImageView, function(supr) {
 
     this.on('InputStart', bind(this, function(event, point) {
 
-      console.log('Input started!');
-
       this._dragStarted = true;
       this._dragStartCoords = point;
       this._origGem = this._level.getGemByCoords(point);
@@ -76,8 +74,6 @@ exports = Class(ImageView, function(supr) {
     this.on('InputMove', bind(this, function(event, point) {
 
       if (!this._dragStarted || this._userInteractionStopped) return;
-
-      console.log('Input moved!!');
 
       var delta = { x: point.x - this._dragStartCoords.x, y: point.y - this._dragStartCoords.y };
 
@@ -124,8 +120,6 @@ exports = Class(ImageView, function(supr) {
 
     this.on('InputSelect', bind(this, function(event, point) {
 
-      console.log('Input ended!!!');
-
       this._dragStarted = false;
     }));
 
@@ -139,8 +133,6 @@ exports = Class(ImageView, function(supr) {
 
     this._level.on('GemDestroyed', bind(this, function(gem) {
 
-      console.log('ON GEM DESTROYED');
-
       let particleObjects = this._pEngine.obtainParticleArray(10);
 
       for (let i = 0; i < 10; i++) {
@@ -152,7 +144,7 @@ exports = Class(ImageView, function(supr) {
 
         pObj.dx = Math.random() * -100 * (Math.random() > 0.5 ? 1 : -1);
         pObj.dy = Math.random() * -100 * (Math.random() > 0.5 ? 1 : -1);
-        pObj.ttl = 500;
+        pObj.ttl = 600;
         pObj.opacity = 1;
         pObj.dopacity = -1;
         pObj.width = 50;
