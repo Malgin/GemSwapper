@@ -120,8 +120,6 @@ exports = Class(EventEmitter, function(supr) {
     let gemCol = Math.ceil((point.x - LEFT_PADDING) / (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH)) - 1;
     let gemRow = Math.ceil((point.y - TOP_PADDING) / (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT)) - 1;
 
-    console.log(`OrigGem row: ${gemRow}, col: ${gemCol}`);
-
     return this._gemGrid[gemRow][gemCol];
   };
 
@@ -255,13 +253,11 @@ exports = Class(EventEmitter, function(supr) {
 
   this.deleteSequences = function({ horizSequences, vertSequences }) {
 
-    let animator = null;
-
     for (let i = 0, seqNum = horizSequences.length; i < seqNum; i++) {
 
       for (let j = 0, gemNum = horizSequences[i].length; j < gemNum; j++) {
 
-        animator = this._animateDestroyGem(horizSequences[i][j]);
+        this._animateDestroyGem(horizSequences[i][j]);
       }
     }
 
@@ -269,7 +265,7 @@ exports = Class(EventEmitter, function(supr) {
 
       for (let j = 0, gemNum = vertSequences[i].length; j < gemNum; j++) {
 
-        animator = this._animateDestroyGem(vertSequences[i][j]);
+        this._animateDestroyGem(vertSequences[i][j]);
       }
     }
 

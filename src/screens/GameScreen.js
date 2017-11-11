@@ -7,6 +7,7 @@ import ui.ParticleEngine as ParticleEngine;
 import ui.ImageView as ImageView;
 
 import src.managers.LevelManager as LevelManager;
+import src.managers.ScoreManager as ScoreManager;
 import src.LevelGrid as LevelGrid;
 import src.models.gem.Gem as Gem;
 
@@ -19,7 +20,7 @@ exports = Class(ImageView, function(supr) {
   this.init = function(opts) {
 
     this._levelManager = null;
-    this.level = null;
+    this._level = null;
     this._dragStarted = false;
     this._userInteractionStopped = false;
     this._dragStartCoords = null;
@@ -54,6 +55,10 @@ exports = Class(ImageView, function(supr) {
 
     // init level manager
     this._levelManager = new LevelManager({
+      container: this
+    });
+
+    this._scoreManager = new ScoreManager({
       container: this
     });
 
@@ -125,10 +130,13 @@ exports = Class(ImageView, function(supr) {
 
     this._level.on('GemSwapComplete', bind(this, function() {
 
-      this._level.deleteSequences({
+      let sequences = {
         horizSequences: this._level.detectHorizontalSequences(),
         vertSequences: this._level.detectVerticalSequences()
-      });
+      };
+
+      this._scoreManager.addScoreForSequences(sequences);
+      this._level.deleteSequences(sequences);
     }));
 
     this._level.on('GemDestroyed', bind(this, function(gem) {
@@ -171,10 +179,13 @@ exports = Class(ImageView, function(supr) {
 
       if (this._level.hasDeletableSequences()) {
 
-        this._level.deleteSequences({
+        let sequences = {
           horizSequences: this._level.detectHorizontalSequences(),
           vertSequences: this._level.detectVerticalSequences()
-        });
+        };
+
+        this._scoreManager.addScoreForSequences(sequences);
+        this._level.deleteSequences(sequences);
       } else {
 
         this._enableUserInteraction();
