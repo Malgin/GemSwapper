@@ -12,6 +12,7 @@ import src.models.gem.Gem as Gem;
 
 const SWAP_FORBIDDEN_ANIMATION_DURATION = 50;
 const SWAP_CLUE_ANIMATION_DURATION = 600;
+const SWAP_CLUE_ANIMATION_PAUSE = 300;
 
 exports = Class(ImageView, function(supr) {
 
@@ -223,7 +224,7 @@ exports = Class(ImageView, function(supr) {
     // start timer for a clue on swapping gems
     this._initialClueTimer = setTimeout(bind(this, function() {
 
-      this._clueTimer = setInterval(bind(this, this._animateClue), SWAP_CLUE_ANIMATION_DURATION + 200);
+      this._clueTimer = setInterval(bind(this, this._animateClue), SWAP_CLUE_ANIMATION_DURATION + SWAP_CLUE_ANIMATION_PAUSE);
     }), 3000);
   };
 
@@ -235,39 +236,13 @@ exports = Class(ImageView, function(supr) {
 
     const [gem1, gem2] = this._clueSwapGems;
 
-    // play animation, and don't move gems
-    const gem1Coords = new Point(gem1.style.x, gem1.style.y);
-    const gem2Coords = new Point(gem2.style.x, gem2.style.y);
+    animate(gem1)
+        .now({ opacity: 0.8 }, SWAP_CLUE_ANIMATION_DURATION / 2)
+        .then({ opacity: 1 }, SWAP_CLUE_ANIMATION_DURATION / 2);
 
-    if (gem1.getGridPosition().col !== gem2.getGridPosition().col) {
-
-      // horizontal swap
-      animate(gem1)
-          .now({ x: gem1Coords.x - 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ x: gem1Coords.x + 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ x: gem1Coords.x - 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ x: gem1Coords.x }, SWAP_CLUE_ANIMATION_DURATION / 4);
-
-      animate(gem2)
-          .now({ x: gem2Coords.x - 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ x: gem2Coords.x + 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ x: gem2Coords.x - 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ x: gem2Coords.x }, SWAP_CLUE_ANIMATION_DURATION / 4);
-    } else {
-
-      // vertical swap
-      animate(gem1)
-          .now({ y: gem1Coords.y - 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ y: gem1Coords.y + 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ y: gem1Coords.y - 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ y: gem1Coords.y }, SWAP_CLUE_ANIMATION_DURATION / 4);
-
-      animate(gem2)
-          .now({ y: gem2Coords.y - 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ y: gem2Coords.y + 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ y: gem2Coords.y - 2 }, SWAP_CLUE_ANIMATION_DURATION / 4)
-          .then({ y: gem2Coords.y }, SWAP_CLUE_ANIMATION_DURATION / 4);
-    }
+    animate(gem2)
+        .now({ opacity: 0.8 }, SWAP_CLUE_ANIMATION_DURATION / 2)
+        .then({ opacity: 1 }, SWAP_CLUE_ANIMATION_DURATION / 2);
   };
 
   this._clearClue = function() {
