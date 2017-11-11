@@ -42,7 +42,7 @@ exports = Class(function() {
       y: 80,
       verticalAlign: 'middle',
       horizontalAlign: 'center',
-      color: '#fff',
+      color: '#fff'
     });
 
     this._scoreTextView.setText(`${ this._gameScore }`);

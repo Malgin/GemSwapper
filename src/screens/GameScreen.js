@@ -5,6 +5,7 @@ import animate;
 import ui.ParticleEngine as ParticleEngine;
 
 import ui.ImageView as ImageView;
+import ui.TextView as TextView;
 
 import src.managers.LevelManager as LevelManager;
 import src.managers.ScoreManager as ScoreManager;
@@ -19,8 +20,10 @@ exports = Class(ImageView, function(supr) {
 
   this.init = function(opts) {
 
-    this._levelManager = null;
     this._level = null;
+    this._levelManager = null;
+    this._scoreManager = null;
+
     this._dragStarted = false;
     this._userInteractionStopped = true;
     this._dragStartCoords = null;
@@ -30,6 +33,9 @@ exports = Class(ImageView, function(supr) {
     this._clueSwapGems = null;
 
     this._forbiddenSwapTimer = null;
+
+    this._swapsCounter = 20;
+    this._swapsCountView = null;
 
     this.width = opts.width;
     this.height = opts.height;
@@ -60,6 +66,19 @@ exports = Class(ImageView, function(supr) {
 
     this._scoreManager = new ScoreManager({
       container: this
+    });
+
+    this._swapsCountView = new TextView({
+      superview: this,
+      width: this.style.width,
+      height: 200,
+      autoFontSize: true,
+      x: 0,
+      y: 830,
+      verticalAlign: 'middle',
+      horizontalAlign: 'center',
+      color: '#fff',
+      text: this._swapsCounter
     });
 
     // init first level
@@ -100,6 +119,8 @@ exports = Class(ImageView, function(supr) {
             console.log(`direction is ${ direction }, delta is x: ${ delta.x }, y: ${ delta.y }`);
 
             this._clearClue();
+
+            this._swapsCountView.setText(--this._swapsCounter);
 
             this._level.swapGems(this._origGem, targetGem);
           } else {
@@ -190,11 +211,17 @@ exports = Class(ImageView, function(supr) {
         this._level.deleteSequences(sequences);
       } else {
 
-        this._enableUserInteraction();
+        if (this._swapsCounter > 0) {
 
-        if (this._initialClueTimer === null && this._clueTimer === null) {
+          this._enableUserInteraction();
 
-          this._fireUpClueAnimation();
+          if (this._initialClueTimer === null && this._clueTimer === null) {
+
+            this._fireUpClueAnimation();
+          }
+        } else {
+
+          // end game
         }
       }
     }));

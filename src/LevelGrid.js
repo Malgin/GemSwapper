@@ -170,6 +170,9 @@ exports = Class(EventEmitter, function(supr) {
 
   this.swapGems = function(origGem, targetGem) {
 
+    origGem.updateOpts({ opacity: 1 });
+    targetGem.updateOpts({ opacity: 1 });
+
     const origGemGridPos = origGem.getGridPosition();
     const targetGemGridPos = targetGem.getGridPosition();
 
@@ -182,9 +185,9 @@ exports = Class(EventEmitter, function(supr) {
     const origGemCoords = new Point(origGem.style.x, origGem.style.y);
     const targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
 
-    animate(origGem).now({x: targetGemCoords.x, y: targetGemCoords.y}, GEM_SWAP_ANIMATION_DURATION);
+    animate(origGem).now({ x: targetGemCoords.x, y: targetGemCoords.y }, GEM_SWAP_ANIMATION_DURATION);
     animate(targetGem)
-        .now({x: origGemCoords.x, y: origGemCoords.y}, GEM_SWAP_ANIMATION_DURATION)
+        .now({ x: origGemCoords.x, y: origGemCoords.y }, GEM_SWAP_ANIMATION_DURATION)
         .then(bind(this, function() {
 
           this.emit('GemSwapComplete');
