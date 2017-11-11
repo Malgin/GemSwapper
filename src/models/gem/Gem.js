@@ -6,9 +6,6 @@ exports = Class(ImageView, function(supr) {
 
   this.init = function(opts) {
 
-    this._collisionBox = new Rectangle();
-    this._originalPosition = new Point();
-
     /**
      * Contains two properties: row and col
      *
@@ -46,26 +43,6 @@ exports = Class(ImageView, function(supr) {
   this.getGridPosition = function() {
 
     return this._gridPosition;
-  };
-
-  this.getCollisionBox = function() {
-
-    this._collisionBox.x = this.style.x;
-    this._collisionBox.y = this.style.y;
-    this._collisionBox.width = this.style.width;
-    this._collisionBox.height = this.style.height;
-
-    return this._collisionBox;
-  };
-
-  this.setOriginalPosition = function(point) {
-
-    this._originalPosition = point;
-  };
-
-  this.getOriginalPosition = function() {
-
-    return this._originalPosition;
   };
 });
 

@@ -2,6 +2,8 @@ import math.geom.Point as Point;
 
 import animate;
 
+import ui.ParticleEngine as ParticleEngine;
+
 import ui.ImageView as ImageView;
 
 import src.managers.LevelManager as LevelManager;
@@ -33,6 +35,13 @@ exports = Class(ImageView, function(supr) {
   };
 
   this._build = function() {
+
+    this._pEngine = new ParticleEngine({
+      superview: this,
+      width: 1,
+      height: 1,
+      initCount: 100
+    });
 
     // init level manager
     this._levelManager = new LevelManager({
@@ -98,7 +107,10 @@ exports = Class(ImageView, function(supr) {
                 .then({ x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION)
                 .then(bind(this, function() {
 
-                  this._userInteractionStopped = false;
+                  if (!this._dragStarted) {
+
+                    this._userInteractionStopped = false;
+                  }
                 }));
           }
         }
@@ -124,6 +136,34 @@ exports = Class(ImageView, function(supr) {
       });
     }));
 
+    this._level.on('GemDestroyed', bind(this, function(gem) {
+
+      console.log('ON GEM DESTROYED');
+
+      let particleObjects = this._pEngine.obtainParticleArray(10);
+
+      for (let i = 0; i < 10; i++) {
+
+        let pObj = particleObjects[i];
+
+        pObj.x = gem.style.x;
+        pObj.y = gem.style.y;
+
+        pObj.dx = Math.random() * -100;
+        pObj.dy = Math.random() * -100;
+        pObj.ttl = 500;
+        pObj.ddy = 50;
+        pObj.width = 50;
+        pObj.height = 50;
+        pObj.zIndex = 1000;
+        pObj.image = `resources/images/particles/gleam_${ gem.color }.png`;
+      }
+
+      this._pEngine.emitParticles(particleObjects);
+
+      this._level.releaseGem(gem);
+    }));
+
     this._level.on('DeleteSequencesComplete', bind(this, function() {
 
       this._level.detectGapsAndMoveUpperGems();
@@ -145,6 +185,11 @@ exports = Class(ImageView, function(supr) {
         this._userInteractionStopped = false;
       }
     }));
+  };
+
+  this.tick = function(dt) {
+
+    this._pEngine.runTick(dt);
   };
 
   this._getDragDirection = function(dragDelta) {
