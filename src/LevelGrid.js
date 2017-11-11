@@ -365,7 +365,14 @@ exports = Class(EventEmitter, function(supr) {
     this._gemPool.releaseView(gem);
   };
 
+  this.getRandomPossibleSwap = function() {
+
+    return this._possibleSwaps[Math.floor(Math.random() * this._possibleSwaps.length)];
+  };
+
   this._generatePossibleSwapsList = function() {
+
+    this._possibleSwaps = [];
 
     let gem = null;
 
