@@ -29,7 +29,8 @@ exports = Class(ViewPool, function(supr) {
       height: Gem.GEM_HEIGHT,
       color: color,
       image: `resources/images/gems/${color}.png`,
-      visible: false
+      visible: false,
+      opacity: 1
     });
 
     return gem;

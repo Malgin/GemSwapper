@@ -312,15 +312,7 @@ exports = Class(EventEmitter, function(supr) {
       }
     }
 
-    if (animator !== null) {
-      animator.then(bind(this, function() {
-
-        this.emit('GapsDetectionComplete');
-      }));
-    } else {
-
-      this.emit('GapsDetectionComplete');
-    }
+    this.emit('GapsDetectionComplete');
   };
 
   this.spawnNewGems = function() {

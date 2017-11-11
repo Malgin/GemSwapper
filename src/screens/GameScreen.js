@@ -48,7 +48,7 @@ exports = Class(ImageView, function(supr) {
       superview: this,
       width: 1,
       height: 1,
-      initCount: 100,
+      initCount: 1000,
       zIndex: 1000
     });
 
@@ -153,7 +153,6 @@ exports = Class(ImageView, function(supr) {
         pObj.dx = Math.random() * -100 * (Math.random() > 0.5 ? 1 : -1);
         pObj.dy = Math.random() * -100 * (Math.random() > 0.5 ? 1 : -1);
         pObj.ttl = 500;
-        // pObj.ddy = 50;
         pObj.opacity = 1;
         pObj.dopacity = -1;
         pObj.width = 50;
