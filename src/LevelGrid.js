@@ -26,6 +26,7 @@ exports = Class(EventEmitter, function(supr) {
 
     this._gemColors = ['blue', 'green', 'purple', 'red', 'yellow'];
     this._gemPool = new GemPool();
+    this._gemGridLayout = opts.gridLayout;
     this._gemGrid = [];
 
     /**
@@ -41,7 +42,8 @@ exports = Class(EventEmitter, function(supr) {
 
   /**
    *
-   * @param direction One of ['LEFT', 'UP', 'RIGHT', 'DOWN']
+   * @param gem Gem
+   * @param direction String One of ['LEFT', 'UP', 'RIGHT', 'DOWN']
    * @return {boolean}
    */
   this.gemPresentToDirection = function(gem, direction) {
@@ -50,19 +52,31 @@ exports = Class(EventEmitter, function(supr) {
 
     switch(direction) {
       case exports.DIRECTION_LEFT:
-        if (gemGridPosition.col === 0) return false;
+        if (
+            gemGridPosition.col === 0 || // dragging toward left edge of the field
+            this._gemGrid[gemGridPosition.row][gemGridPosition.col - 1] === null // gem is not present in level layout
+        ) return false;
         break;
 
       case exports.DIRECTION_UP:
-        if (gemGridPosition.row === 0) return false;
+        if (
+            gemGridPosition.row === 0 ||
+            this._gemGrid[gemGridPosition.row - 1][gemGridPosition.col] === null
+        ) return false;
         break;
 
       case exports.DIRECTION_RIGHT:
-        if (gemGridPosition.col === this._gemGrid[gemGridPosition.row].length - 1) return false;
+        if (
+            gemGridPosition.col === this._gemGrid[gemGridPosition.row].length - 1 ||
+            this._gemGrid[gemGridPosition.row][gemGridPosition.col + 1] === null
+        ) return false;
         break;
 
       case exports.DIRECTION_DOWN:
-        if (gemGridPosition.row === this._gemGrid.length - 1) return false;
+        if (
+            gemGridPosition.row === this._gemGrid.length - 1 ||
+            this._gemGrid[gemGridPosition.row + 1][gemGridPosition.col] === null
+        ) return false;
         break;
     }
 
@@ -79,10 +93,11 @@ exports = Class(EventEmitter, function(supr) {
   };
 
   /**
-   * Detects if dragged gem collided with one in dragging direction
-   * Otherwise, returns null
+   * Returns a gem with wich origGem should swap, or null, if no gem present
    */
   this.getTargetGem = function(origGem, direction) {
+
+    if (!this.gemPresentToDirection(origGem, direction)) return null;
 
     const origGemGridPos = origGem.getGridPosition();
     let targetGem = null;
@@ -130,8 +145,6 @@ exports = Class(EventEmitter, function(supr) {
         .now({ x: origGemCoords.x, y: origGemCoords.y }, GEM_SWAP_ANIMATION_DURATION)
         .then(bind(this, function() {
 
-          console.log("GemSwapComplete PRE FIRED");
-
           this.emit('GemSwapComplete');
         }));
   };
@@ -165,15 +178,21 @@ exports = Class(EventEmitter, function(supr) {
 
       for (let col = 0, colsNum = this._gemGrid[row].length; col < colsNum - 2; col++) {
 
-        if (this._gemGrid[row][col].color === this._gemGrid[row][col + 1].color &&
+        if (this._gemGrid[row][col] !== null &&
+            this._gemGrid[row][col + 1] !== null &&
+            this._gemGrid[row][col + 2] !== null &&
+            this._gemGrid[row][col].color === this._gemGrid[row][col + 1].color &&
             this._gemGrid[row][col].color === this._gemGrid[row][col + 2].color) {
 
           let sequence = [this._gemGrid[row][col]];
 
-          while (col + 1 < colsNum && this._gemGrid[row][col].color === this._gemGrid[row][col + 1].color) {
+          while (
+              col < colsNum - 1 && // not over right edge of a field
+              this._gemGrid[row][col + 1] !== null && // gem present in level layout
+              this._gemGrid[row][col].color === this._gemGrid[row][col + 1].color
+          ) {
 
-            col += 1;
-            sequence.push(this._gemGrid[row][col]);
+            sequence.push(this._gemGrid[row][++col]);
           }
 
           horizSequences.push(sequence);
@@ -192,15 +211,21 @@ exports = Class(EventEmitter, function(supr) {
 
       for (let row = 0; row < ROWS_PER_LEVEL - 2; row++) {
 
-        if (this._gemGrid[row][col].color === this._gemGrid[row + 1][col].color &&
+        if (this._gemGrid[row][col] !== null &&
+            this._gemGrid[row + 1][col] !== null &&
+            this._gemGrid[row + 2][col] !== null &&
+            this._gemGrid[row][col].color === this._gemGrid[row + 1][col].color &&
             this._gemGrid[row][col].color === this._gemGrid[row + 2][col].color) {
 
           let sequence = [this._gemGrid[row][col]];
 
-          while (row + 1 < ROWS_PER_LEVEL && this._gemGrid[row][col].color === this._gemGrid[row + 1][col].color) {
+          while (
+              row + 1 < ROWS_PER_LEVEL &&
+              this._gemGrid[row + 1][col] !== null &&
+              this._gemGrid[row][col].color === this._gemGrid[row + 1][col].color
+          ) {
 
-            row += 1;
-            sequence.push(this._gemGrid[row][col]);
+            sequence.push(this._gemGrid[++row][col]);
           }
 
           vertSequences.push(sequence);
@@ -242,7 +267,7 @@ exports = Class(EventEmitter, function(supr) {
 
         const gem = this._gemGrid[row][col];
 
-        if (row > 0 && gem === null) {
+        if (row > 0 && gem === null && this._gemGridLayout[row][col] === 1) {
 
           // go up until you find any gem or hit ceiling
           let trackRow = row;
@@ -314,7 +339,7 @@ exports = Class(EventEmitter, function(supr) {
     this._gemPool.releaseView(gem);
   };
 
-  this.resetLevel = function() {
+  this.resetGemGrid = function() {
 
     this._gemPool.releaseAllViews();
     this._buildGrid();
@@ -332,25 +357,38 @@ exports = Class(EventEmitter, function(supr) {
 
     this._gemGrid = [];
 
-    for (let row = ROWS_PER_LEVEL - 1; row >= 0; row--) {
+    for (let row = this._gemGridLayout.length - 1; row >= 0; row--) {
 
       this._gemGrid[row] = [];
 
-      for (let col = 0; col < COLS_PER_LEVEL; col++) {
+      for (let col = 0; col < this._gemGridLayout[row].length; col++) {
+
+        if (this._gemGridLayout[row][col] === 0) {
+
+          // empty grid square
+          this._gemGrid[row][col] = null;
+          continue;
+        }
 
         let gemColor = null;
+        let gemFormsSequenceInCol = false;
+        let gemFormsSequenceInRow = false;
 
         do {
 
           gemColor = this._gemColors[Math.floor(Math.random() * this._gemColors.length)];
         } while (
             (row < ROWS_PER_LEVEL - 2 &&
-                this._gemGrid[row + 1][col].color === gemColor &&
-                this._gemGrid[row + 2][col].color === gemColor) ||
+            this._gemGrid[row + 1][col] !== null &&
+            this._gemGrid[row + 2][col] !== null &&
+            this._gemGrid[row + 1][col].color === gemColor &&
+            this._gemGrid[row + 2][col].color === gemColor) ||
             (col >= 2 &&
-                this._gemGrid[row][col - 1].color === gemColor &&
-                this._gemGrid[row][col - 2].color === gemColor)
-            );
+            this._gemGrid[row][col - 1] !== null &&
+            this._gemGrid[row][col - 2] !== null &&
+            this._gemGrid[row][col - 1].color === gemColor &&
+            this._gemGrid[row][col - 2].color === gemColor)
+        );
 
         let gem = this._gemPool.obtainGem(gemColor);
 
@@ -395,7 +433,11 @@ exports = Class(EventEmitter, function(supr) {
 
         gem = this._gemGrid[row][col];
 
-        if (row !== this._gemGrid.length - 1) {
+        if (gem === null) continue;
+
+        let notLastRow = (row !== this._gemGrid.length - 1);
+
+        if (notLastRow && this.gemPresentToDirection(gem, exports.DIRECTION_DOWN)) {
 
           // not the last row, so checking if we'll get hit after swapping gem with the one below it
           // "phantom" swap gems
@@ -414,7 +456,9 @@ exports = Class(EventEmitter, function(supr) {
           this._gemGrid[row][col] = gem;
         }
 
-        if (col !== this._gemGrid[row].length - 1) {
+        let notLastCol = col !== this._gemGrid[row].length - 1;
+
+        if (notLastCol && this.gemPresentToDirection(gem, exports.DIRECTION_RIGHT)) {
 
           // not the last one col, so checking if we'll get hit after swapping gem with the one to the right
           // "phantom" swap gems
@@ -447,7 +491,11 @@ exports = Class(EventEmitter, function(supr) {
     curCheckRow = row;
     curCheckCol = col - 1;
 
-    while (curCheckCol >= 0 && this._gemGrid[curCheckRow][curCheckCol].color === gem.color) {
+    while (
+        curCheckCol >= 0 && // not over left edge of the field
+        this._gemGrid[curCheckRow][curCheckCol] !== null && // gem is present in level layout
+        this._gemGrid[curCheckRow][curCheckCol].color === gem.color // colors match
+    ) {
 
       curCheckCol -=  1;
       sequenceLength += 1;
@@ -456,7 +504,11 @@ exports = Class(EventEmitter, function(supr) {
     // go right and check for a sequence
     curCheckCol = col + 1;
 
-    while (curCheckCol < this._gemGrid[curCheckRow].length && this._gemGrid[curCheckRow][curCheckCol].color === gem.color) {
+    while (
+        curCheckCol < this._gemGrid[curCheckRow].length && // not over right edge of the field
+        this._gemGrid[curCheckRow][curCheckCol] !== null && // gem is present in level layout
+        this._gemGrid[curCheckRow][curCheckCol].color === gem.color
+    ) {
 
       curCheckCol += 1;
       sequenceLength += 1;
@@ -469,7 +521,11 @@ exports = Class(EventEmitter, function(supr) {
     curCheckRow = row - 1;
     curCheckCol = col;
 
-    while (curCheckRow >= 0 && this._gemGrid[curCheckRow][curCheckCol].color === gem.color) {
+    while (
+        curCheckRow >= 0 && // not over top edge of the field
+        this._gemGrid[curCheckRow][curCheckCol] !== null &&
+        this._gemGrid[curCheckRow][curCheckCol].color === gem.color
+    ) {
 
       curCheckRow -= 1;
       sequenceLength += 1;
@@ -478,7 +534,11 @@ exports = Class(EventEmitter, function(supr) {
     // go down and check for a sequence
     curCheckRow = row + 1;
 
-    while (curCheckRow < this._gemGrid.length && this._gemGrid[curCheckRow][curCheckCol].color === gem.color) {
+    while (
+        curCheckRow < this._gemGrid.length && // not over bottom edge of the field
+        this._gemGrid[curCheckRow][curCheckCol] !== null &&
+        this._gemGrid[curCheckRow][curCheckCol].color === gem.color
+    ) {
 
       curCheckRow += 1;
       sequenceLength += 1;
@@ -499,6 +559,7 @@ exports = Class(EventEmitter, function(supr) {
       for (let row = 0; row < ROWS_PER_LEVEL; row++) {
 
         if (this._gemGrid[row][col] !== null) break;
+        if (this._gemGrid[row][col] === null && this._gemGridLayout[row][col] === 0) continue;
 
         let newGem = null;
         let gemColor = null;

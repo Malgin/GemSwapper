@@ -29,6 +29,7 @@ exports = Class(ImageView, function(supr) {
     this._levelManager = null;
     this._scoreManager = null;
 
+    this._origGem = null;
     this._dragStarted = false;
     this._userInteractionStopped = true;
     this._dragStartCoords = null;
@@ -89,7 +90,7 @@ exports = Class(ImageView, function(supr) {
 
     this.on(this.EVENT_RESET_GAME, bind(this, this._resetGame));
 
-    this._level = this._levelManager.initLevel();
+    this._level = this._levelManager.initLevel(1);
 
     this._level.on('BuildLevelFinished', bind(this, this._onBuildLevelFinished));
 
@@ -115,7 +116,7 @@ exports = Class(ImageView, function(supr) {
 
   this._onInputMove = function(event, point) {
 
-    if (!this._dragStarted || this._userInteractionStopped) return;
+    if (!this._dragStarted || this._userInteractionStopped || this._origGem === null) return;
 
     var delta = { x: point.x - this._dragStartCoords.x, y: point.y - this._dragStartCoords.y };
 
@@ -164,7 +165,7 @@ exports = Class(ImageView, function(supr) {
   this._resetGame = function() {
 
     this._swapsCounter = SWAP_INITIAL_COUNT;
-    this._level.resetLevel();
+    this._level.resetGemGrid();
     this._scoreManager.resetScore();
   };
 
