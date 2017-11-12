@@ -1,3 +1,5 @@
+import device;
+
 import ui.TextView as TextView;
 import ui.StackView as StackView;
 
@@ -12,10 +14,10 @@ exports = Class(GC.Application, function () {
       preload: ['resources/images']
     });
 
-    this._baseWidth = 576;
     this._baseHeight = 1024;
+    this._baseWidth = (this._baseHeight * device.width) / device.height;
 
-    this.view.style.scale = 1.3;
+    this.view.style.scale = device.height / this._baseHeight;
 
     this._rootView = new StackView({
       superview: this,

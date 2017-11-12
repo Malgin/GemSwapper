@@ -42,9 +42,6 @@ exports = Class(ImageView, function(supr) {
     this._swapsCounter = SWAP_INITIAL_COUNT;
     this._swapsCountView = null;
 
-    this.width = opts.width;
-    this.height = opts.height;
-
     opts = merge(opts, {
       image: 'resources/images/ui/game_background.png'
     });
