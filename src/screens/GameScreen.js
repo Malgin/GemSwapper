@@ -81,77 +81,134 @@ exports = Class(ImageView, function(supr) {
       text: this._swapsCounter
     });
 
+    this.on('InputStart', bind(this, this._onInputStart));
+    this.on('InputMove', bind(this, this._onInputMove));
+    this.on('InputSelect', bind(this, this._onInputSelect));
+
     // init first level
     this._level = this._levelManager.initLevel();
 
-    this._level.on('BuildLevelFinished', bind(this, function() {
+    this._level.on('BuildLevelFinished', bind(this, this._onBuildLevelFinished));
 
-      this._enableUserInteraction();
-      this._fireUpClueAnimation();
-    }));
+    this._level.on('GemSwapComplete', bind(this, this._destroyGemSequences));
+    this._level.on('DeleteSequencesComplete', bind(this, this._detectGapsAndMoveGems));
+    this._level.on('GapsDetectionComplete', this._level.spawnNewGems);
+    this._level.on('GemSpawnComplete', bind(this, this._detectSequencesOrEnableInteraction));
 
-    this.on('InputStart', bind(this, function(event, point) {
+    this._level.on('GemDestroyed', bind(this, this._animateDestroyedGem));
+  };
 
-      this._dragStarted = true;
-      this._dragStartCoords = point;
-      this._origGem = this._level.getGemByCoords(point);
-    }));
+  this.tick = function(dt) {
 
-    this.on('InputMove', bind(this, function(event, point) {
+    this._pEngine.runTick(dt);
+  };
 
-      if (!this._dragStarted || this._userInteractionStopped) return;
+  this._onInputStart = function() {
 
-      var delta = { x: point.x - this._dragStartCoords.x, y: point.y - this._dragStartCoords.y };
+    this._dragStarted = true;
+    this._dragStartCoords = point;
+    this._origGem = this._level.getGemByCoords(point);
+  };
 
-      if (this._movedFarEnough(delta)) {
+  this._onInputMove = function() {
 
-        // get drag direction
-        var direction = this._getDragDirection(delta);
+    if (!this._dragStarted || this._userInteractionStopped) return;
 
-        if (this._level.gemPresentToDirection(this._origGem, direction)) {
+    var delta = { x: point.x - this._dragStartCoords.x, y: point.y - this._dragStartCoords.y };
 
-          this._userInteractionStopped = true;
+    if (!this._movedFarEnough(delta)) return;
 
-          var targetGem = this._level.getTargetGem(this._origGem, direction);
+    var direction = this._getDragDirection(delta);
 
-          if (this._level.swapPossibleFor(this._origGem, targetGem)) {
+    if (!this._level.gemPresentToDirection(this._origGem, direction)) return;
 
-            console.log(`direction is ${ direction }, delta is x: ${ delta.x }, y: ${ delta.y }`);
+    this._userInteractionStopped = true;
 
-            this._clearClue();
+    var targetGem = this._level.getTargetGem(this._origGem, direction);
 
-            this._swapsCountView.setText(--this._swapsCounter);
+    if (this._level.swapPossibleFor(this._origGem, targetGem)) {
 
-            this._level.swapGems(this._origGem, targetGem);
-          } else {
+      this._clearClue();
 
-            // swap is forbidden, play animation, and don't move gems
-            var origGemCoords = new Point(this._origGem.style.x, this._origGem.style.y);
-            var targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
+      this._swapsCountView.setText(--this._swapsCounter);
+      this._level.swapGems(this._origGem, targetGem);
+    } else {
 
-            animate(this._origGem)
-                .now ({ x: origGemCoords.x - 2, y: origGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
-                .then({ x: origGemCoords.x + 2, y: origGemCoords.y + 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
-                .then({ x: origGemCoords.x - 2, y: origGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
-                .then({ x: origGemCoords.x, y: origGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION);
+      // swap is forbidden, play animation, and don't move gems
+      var origGemCoords = new Point(this._origGem.style.x, this._origGem.style.y);
+      var targetGemCoords = new Point(targetGem.style.x, targetGem.style.y);
 
-            animate(targetGem)
-                .now ({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
-                .then({ x: targetGemCoords.x + 2, y: targetGemCoords.y + 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
-                .then({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
-                .then({ x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION)
-                .then(bind(this, this._enableUserInteraction));
-          }
-        }
-      }
-    }));
+      animate(this._origGem)
+          .now ({ x: origGemCoords.x - 2, y: origGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+          .then({ x: origGemCoords.x + 2, y: origGemCoords.y + 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+          .then({ x: origGemCoords.x - 2, y: origGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+          .then({ x: origGemCoords.x, y: origGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION);
 
-    this.on('InputSelect', bind(this, function(event, point) {
+      animate(targetGem)
+          .now ({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+          .then({ x: targetGemCoords.x + 2, y: targetGemCoords.y + 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+          .then({ x: targetGemCoords.x - 2, y: targetGemCoords.y - 2}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+          .then({ x: targetGemCoords.x, y: targetGemCoords.y}, SWAP_FORBIDDEN_ANIMATION_DURATION)
+          .then(bind(this, this._enableUserInteraction));
+    }
+  };
 
-      this._dragStarted = false;
-    }));
+  this._onInputSelect = function() {
 
-    this._level.on('GemSwapComplete', bind(this, function() {
+    this._dragStarted = false;
+  };
+
+  this._onBuildLevelFinished = function() {
+
+    this._enableUserInteraction();
+    this._fireUpClueAnimation();
+  };
+
+  this._destroyGemSequences = function() {
+
+    let sequences = {
+      horizSequences: this._level.detectHorizontalSequences(),
+      vertSequences: this._level.detectVerticalSequences()
+    };
+
+    this._scoreManager.addScoreForSequences(sequences);
+    this._level.deleteSequences(sequences);
+  };
+
+  this._animateDestroyedGem = function(gem) {
+
+    let particleObjects = this._pEngine.obtainParticleArray(10);
+
+    for (let i = 0; i < 10; i++) {
+
+      let pObj = particleObjects[i];
+
+      pObj.x = gem.style.x;
+      pObj.y = gem.style.y;
+
+      pObj.dx = Math.random() * 100 * (Math.random() > 0.5 ? 1 : -1);
+      pObj.dy = Math.random() * 100 * (Math.random() > 0.5 ? 1 : -1);
+      pObj.ttl = 600;
+      pObj.opacity = 1;
+      pObj.dopacity = -1;
+      pObj.width = 50;
+      pObj.height = 50;
+      pObj.image = `resources/images/particles/gleam_${ gem.color }.png`;
+    }
+
+    this._pEngine.emitParticles(particleObjects);
+
+    this._level.releaseGem(gem);
+  };
+
+  this._detectGapsAndMoveGems = function() {
+
+    this._level.detectGapsAndMoveUpperGems();
+  };
+
+  this._detectSequencesOrEnableInteraction = function() {
+
+    if (this._level.hasDeletableSequences()) {
 
       let sequences = {
         horizSequences: this._level.detectHorizontalSequences(),
@@ -160,72 +217,17 @@ exports = Class(ImageView, function(supr) {
 
       this._scoreManager.addScoreForSequences(sequences);
       this._level.deleteSequences(sequences);
-    }));
+    } else {
 
-    this._level.on('GemDestroyed', bind(this, function(gem) {
+      if (this._swapsCounter > 0) {
 
-      let particleObjects = this._pEngine.obtainParticleArray(10);
-
-      for (let i = 0; i < 10; i++) {
-
-        let pObj = particleObjects[i];
-
-        pObj.x = gem.style.x;
-        pObj.y = gem.style.y;
-
-        pObj.dx = Math.random() * 100 * (Math.random() > 0.5 ? 1 : -1);
-        pObj.dy = Math.random() * 100 * (Math.random() > 0.5 ? 1 : -1);
-        pObj.ttl = 600;
-        pObj.opacity = 1;
-        pObj.dopacity = -1;
-        pObj.width = 50;
-        pObj.height = 50;
-        pObj.image = `resources/images/particles/gleam_${ gem.color }.png`;
-      }
-
-      this._pEngine.emitParticles(particleObjects);
-
-      this._level.releaseGem(gem);
-    }));
-
-    this._level.on('DeleteSequencesComplete', bind(this, function() {
-
-      this._level.detectGapsAndMoveUpperGems();
-    }));
-
-    this._level.on('GapsDetectionComplete', bind(this, function() {
-
-      this._level.spawnNewGems();
-    }));
-
-    this._level.on('GemSpawnComplete', bind(this, function() {
-
-      if (this._level.hasDeletableSequences()) {
-
-        let sequences = {
-          horizSequences: this._level.detectHorizontalSequences(),
-          vertSequences: this._level.detectVerticalSequences()
-        };
-
-        this._scoreManager.addScoreForSequences(sequences);
-        this._level.deleteSequences(sequences);
+        this._enableUserInteraction();
+        this._fireUpClueAnimation();
       } else {
 
-        if (this._swapsCounter > 0) {
-
-          this._enableUserInteraction();
-          this._fireUpClueAnimation();
-        } else {
-
-          // end game
-        }
+        // end game
       }
-    }));
-  };
-
-  this.tick = function(dt) {
-
-    this._pEngine.runTick(dt);
+    }
   };
 
   this._getDragDirection = function(dragDelta) {
