@@ -12,6 +12,8 @@ import src.managers.ScoreManager as ScoreManager;
 import src.LevelGrid as LevelGrid;
 import src.models.gem.Gem as Gem;
 
+const SWAP_INITIAL_COUNT = 20;
+
 const SWAP_FORBIDDEN_ANIMATION_DURATION = 50;
 const SWAP_CLUE_ANIMATION_DURATION = 600;
 const SWAP_CLUE_ANIMATION_PAUSE = 300;
@@ -19,6 +21,9 @@ const SWAP_CLUE_ANIMATION_PAUSE = 300;
 exports = Class(ImageView, function(supr) {
 
   this.init = function(opts) {
+
+    this.EVENT_RESET_GAME = 'ResetGame';
+    this.EVENT_END_GAME = 'EndGame';
 
     this._level = null;
     this._levelManager = null;
@@ -34,14 +39,14 @@ exports = Class(ImageView, function(supr) {
 
     this._forbiddenSwapTimer = null;
 
-    this._swapsCounter = 20;
+    this._swapsCounter = SWAP_INITIAL_COUNT;
     this._swapsCountView = null;
 
     this.width = opts.width;
     this.height = opts.height;
 
     opts = merge(opts, {
-      image: 'resources/images/ui/background.png'
+      image: 'resources/images/ui/game_background.png'
     });
 
     supr(this, 'init', [opts]);
@@ -85,13 +90,14 @@ exports = Class(ImageView, function(supr) {
     this.on('InputMove', bind(this, this._onInputMove));
     this.on('InputSelect', bind(this, this._onInputSelect));
 
-    // init first level
+    this.on(this.EVENT_RESET_GAME, bind(this, this._resetGame));
+
     this._level = this._levelManager.initLevel();
 
     this._level.on('BuildLevelFinished', bind(this, this._onBuildLevelFinished));
 
     this._level.on('GemSwapComplete', bind(this, this._destroyGemSequences));
-    this._level.on('DeleteSequencesComplete', bind(this, this._detectGapsAndMoveGems));
+    this._level.on('DeleteSequencesComplete', this._level.detectGapsAndMoveUpperGems);
     this._level.on('GapsDetectionComplete', this._level.spawnNewGems);
     this._level.on('GemSpawnComplete', bind(this, this._detectSequencesOrEnableInteraction));
 
@@ -103,14 +109,14 @@ exports = Class(ImageView, function(supr) {
     this._pEngine.runTick(dt);
   };
 
-  this._onInputStart = function() {
+  this._onInputStart = function(event, point) {
 
     this._dragStarted = true;
     this._dragStartCoords = point;
     this._origGem = this._level.getGemByCoords(point);
   };
 
-  this._onInputMove = function() {
+  this._onInputMove = function(event, point) {
 
     if (!this._dragStarted || this._userInteractionStopped) return;
 
@@ -158,6 +164,13 @@ exports = Class(ImageView, function(supr) {
     this._dragStarted = false;
   };
 
+  this._resetGame = function() {
+
+    this._swapsCounter = SWAP_INITIAL_COUNT;
+    this._level.resetLevel();
+    this._scoreManager.resetScore();
+  };
+
   this._onBuildLevelFinished = function() {
 
     this._enableUserInteraction();
@@ -201,11 +214,6 @@ exports = Class(ImageView, function(supr) {
     this._level.releaseGem(gem);
   };
 
-  this._detectGapsAndMoveGems = function() {
-
-    this._level.detectGapsAndMoveUpperGems();
-  };
-
   this._detectSequencesOrEnableInteraction = function() {
 
     if (this._level.hasDeletableSequences()) {
@@ -226,6 +234,7 @@ exports = Class(ImageView, function(supr) {
       } else {
 
         // end game
+        this.emit(this.EVENT_END_GAME);
       }
     }
   };

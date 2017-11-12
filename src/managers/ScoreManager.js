@@ -69,7 +69,13 @@ exports = Class(function() {
     }
 
     this._gameScore += addScore;
-    this._scoreTextView.setText(`${ this._gameScore }`);
+    this._scoreTextView.setText(this._gameScore);
+  };
+
+  this.resetScore = function() {
+
+    this._gameScore = 0;
+    this._scoreTextView.setText(this._gameScore);
   };
 
   this._getScoreForSequenceLength = function(length) {
@@ -78,5 +84,5 @@ exports = Class(function() {
     const bonusForLength = Math.pow(10, (length - 3));
 
     return baseScore + bonusForLength;
-  }
+  };
 });

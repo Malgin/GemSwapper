@@ -1,7 +1,8 @@
 {
   "appID": "e3cc258a2fac405aabadc39e0b1dc299",
   "dependencies": {
-    "devkit-core": "https://github.com/gameclosure/devkit-core#v4.5.3"
+    "devkit-core": "https://github.com/gameclosure/devkit-core#v4.5.3",
+    "devkit-menus": "https://github.com/gameclosure/menus#v2.0.0"
   },
   "shortName": "GemSwapper",
   "studio": {

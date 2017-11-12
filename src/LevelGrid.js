@@ -36,65 +36,7 @@ exports = Class(EventEmitter, function(supr) {
      */
     this._possibleSwaps = [];
 
-    this._build();
-
     supr(this, 'init', [opts]);
-  };
-
-  this._build = function() {
-
-    let longestAnimationTime = 0;
-    let animator = null;
-
-    for (let row = ROWS_PER_LEVEL - 1; row >= 0; row--) {
-
-      this._gemGrid[row] = [];
-
-      for (let col = 0; col < COLS_PER_LEVEL; col++) {
-
-        let gemColor = null;
-
-        do {
-
-          gemColor = this._gemColors[Math.floor(Math.random() * this._gemColors.length)];
-        } while (
-            (row < ROWS_PER_LEVEL - 2 &&
-            this._gemGrid[row + 1][col].color === gemColor &&
-            this._gemGrid[row + 2][col].color === gemColor) ||
-            (col >= 2 &&
-            this._gemGrid[row][col - 1].color === gemColor &&
-            this._gemGrid[row][col - 2].color === gemColor)
-        );
-
-        let gem = this._gemPool.obtainGem(gemColor);
-
-        gem.updateOpts({
-          superview: this._container
-        });
-
-        gem.setGridPosition({ row, col });
-
-        this._gemGrid[row][col] = gem;
-
-        let animationDelay = 100 + (ROWS_PER_LEVEL - row - 1) * GEM_BASE_ANIMATION_DURATION;
-        let animationLength = GEM_BASE_ANIMATION_DURATION * (gem.getGridPosition().row + 1);
-
-        if (longestAnimationTime < animationDelay + animationLength) {
-
-          longestAnimationTime = animationDelay + animationLength;
-          animator = this._animateNewGem(gem, animationDelay, animationLength);
-        } else {
-
-          this._animateNewGem(gem, animationDelay, animationLength);
-        }
-      }
-    }
-
-    animator.then(bind(this, function() {
-
-      this._generatePossibleSwapsList();
-      this.emit('BuildLevelFinished');
-    }));
   };
 
   /**
@@ -187,6 +129,8 @@ exports = Class(EventEmitter, function(supr) {
     animate(targetGem)
         .now({ x: origGemCoords.x, y: origGemCoords.y }, GEM_SWAP_ANIMATION_DURATION)
         .then(bind(this, function() {
+
+          console.log("GemSwapComplete PRE FIRED");
 
           this.emit('GemSwapComplete');
         }));
@@ -370,9 +314,73 @@ exports = Class(EventEmitter, function(supr) {
     this._gemPool.releaseView(gem);
   };
 
+  this.resetLevel = function() {
+
+    this._gemPool.releaseAllViews();
+    this._buildGrid();
+  };
+
   this.getRandomPossibleSwap = function() {
 
     return this._possibleSwaps[Math.floor(Math.random() * this._possibleSwaps.length)];
+  };
+
+  this._buildGrid = function() {
+
+    let longestAnimationTime = 0;
+    let animator = null;
+
+    this._gemGrid = [];
+
+    for (let row = ROWS_PER_LEVEL - 1; row >= 0; row--) {
+
+      this._gemGrid[row] = [];
+
+      for (let col = 0; col < COLS_PER_LEVEL; col++) {
+
+        let gemColor = null;
+
+        do {
+
+          gemColor = this._gemColors[Math.floor(Math.random() * this._gemColors.length)];
+        } while (
+            (row < ROWS_PER_LEVEL - 2 &&
+                this._gemGrid[row + 1][col].color === gemColor &&
+                this._gemGrid[row + 2][col].color === gemColor) ||
+            (col >= 2 &&
+                this._gemGrid[row][col - 1].color === gemColor &&
+                this._gemGrid[row][col - 2].color === gemColor)
+            );
+
+        let gem = this._gemPool.obtainGem(gemColor);
+
+        gem.updateOpts({
+          superview: this._container
+        });
+
+        gem.setGridPosition({ row, col });
+
+        this._gemGrid[row][col] = gem;
+
+        let animationDelay = 100 + (ROWS_PER_LEVEL - row - 1) * GEM_BASE_ANIMATION_DURATION;
+        let animationLength = GEM_BASE_ANIMATION_DURATION * (gem.getGridPosition().row + 1);
+
+        if (longestAnimationTime < animationDelay + animationLength) {
+
+          longestAnimationTime = animationDelay + animationLength;
+          animator = this._animateNewGem(gem, animationDelay, animationLength);
+        } else {
+
+          this._animateNewGem(gem, animationDelay, animationLength);
+        }
+      }
+    }
+
+    animator.then(bind(this, function() {
+
+      this._generatePossibleSwapsList();
+      this.emit('BuildLevelFinished');
+    }));
   };
 
   this._generatePossibleSwapsList = function() {
