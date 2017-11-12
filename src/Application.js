@@ -14,17 +14,30 @@ exports = Class(GC.Application, function () {
       preload: ['resources/images']
     });
 
-    this._baseHeight = 1024;
-    this._baseWidth = (this._baseHeight * device.width) / device.height;
+    const baseHeight = 1024;
+    let baseWidth = 576;
+    let rootViewXPos = (device.width - baseWidth) / 2;
 
-    this.view.style.scale = device.height / this._baseHeight;
+    const iPhoneRatio = 16/9;
+    const deviceRatio = device.height / device.width;
+    const deviceRatioThreshold = deviceRatio * 0.05;
+
+    if (deviceRatio < iPhoneRatio + deviceRatioThreshold && deviceRatio > iPhoneRatio - deviceRatioThreshold) {
+
+      // it seems like this is iPhone
+      // calculate width
+      baseWidth = (baseHeight * device.width) / device.height;
+      rootViewXPos = 0;
+    }
+
+    this.view.style.scale = device.height / baseHeight;
 
     this._rootView = new StackView({
       superview: this,
-      x: 0,
+      x: rootViewXPos,
       y: 0,
-      width: this._baseWidth,
-      height: this._baseHeight,
+      width: baseWidth,
+      height: baseHeight,
       clip: true
     });
 
@@ -40,14 +53,13 @@ exports = Class(GC.Application, function () {
     this._gameScreen = new GameScreen({
       x: 0,
       y: 0,
-      width: this._baseWidth,
-      height: this._baseHeight
+      width: baseWidth,
+      height: baseHeight
     });
 
     this._gameScreen.on(this._gameScreen.EVENT_END_GAME, bind(this, this._onEndGame));
 
     this._rootView.push(this._menuScreen);
-    // this._rootView.push(gameScreen);
   };
 
   this.launchUI = function () {
