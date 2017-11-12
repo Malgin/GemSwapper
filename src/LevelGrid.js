@@ -86,8 +86,6 @@ exports = Class(EventEmitter, function(supr) {
         } else {
 
           this._animateNewGem(gem, animationDelay, animationLength);
-
-          animate(gem);
         }
       }
     }

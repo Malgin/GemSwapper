@@ -173,8 +173,8 @@ exports = Class(ImageView, function(supr) {
         pObj.x = gem.style.x;
         pObj.y = gem.style.y;
 
-        pObj.dx = Math.random() * -100 * (Math.random() > 0.5 ? 1 : -1);
-        pObj.dy = Math.random() * -100 * (Math.random() > 0.5 ? 1 : -1);
+        pObj.dx = Math.random() * 100 * (Math.random() > 0.5 ? 1 : -1);
+        pObj.dy = Math.random() * 100 * (Math.random() > 0.5 ? 1 : -1);
         pObj.ttl = 600;
         pObj.opacity = 1;
         pObj.dopacity = -1;
@@ -214,11 +214,7 @@ exports = Class(ImageView, function(supr) {
         if (this._swapsCounter > 0) {
 
           this._enableUserInteraction();
-
-          if (this._initialClueTimer === null && this._clueTimer === null) {
-
-            this._fireUpClueAnimation();
-          }
+          this._fireUpClueAnimation();
         } else {
 
           // end game
@@ -235,10 +231,12 @@ exports = Class(ImageView, function(supr) {
   this._getDragDirection = function(dragDelta) {
 
     if (Math.abs(dragDelta.x) >= Math.abs(dragDelta.y)) {
+
       // horizontal drag
       if (dragDelta.x > 0) return LevelGrid.DIRECTION_RIGHT;
       else return LevelGrid.DIRECTION_LEFT;
     } else {
+
       // vertical drag
       if (dragDelta.y > 0) return LevelGrid.DIRECTION_DOWN;
       else return LevelGrid.DIRECTION_UP;
@@ -252,11 +250,14 @@ exports = Class(ImageView, function(supr) {
 
   this._fireUpClueAnimation = function() {
 
-    // start timer for a clue on swapping gems
-    this._initialClueTimer = setTimeout(bind(this, function() {
+    if (this._initialClueTimer === null && this._clueTimer === null) {
 
-      this._clueTimer = setInterval(bind(this, this._animateClue), SWAP_CLUE_ANIMATION_DURATION + SWAP_CLUE_ANIMATION_PAUSE);
-    }), 3000);
+      // start timer for a clue on swapping gems
+      this._initialClueTimer = setTimeout(bind(this, function() {
+
+        this._clueTimer = setInterval(bind(this, this._animateClue), SWAP_CLUE_ANIMATION_DURATION + SWAP_CLUE_ANIMATION_PAUSE);
+      }), 3000);
+    }
   };
 
   this._animateClue = function() {
@@ -297,7 +298,7 @@ exports = Class(ImageView, function(supr) {
         clearInterval(this._forbiddenSwapTimer);
       } else {
 
-        // renew the check if uesr is still dragging
+        // renew the check if user is still dragging
         this._forbiddenSwapTimer = setTimeout(bind(this, enableUserInteraction, 100));
       }
     }), 100);
