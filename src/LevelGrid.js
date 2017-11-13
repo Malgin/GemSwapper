@@ -180,11 +180,11 @@ exports = Class(EventEmitter, function(supr) {
 
       for (let col = 0, colsNum = this._gemGrid[row].length; col < colsNum - 2; col++) {
 
-        if (this._gemGrid[row][col] !== null &&
-            this._gemGrid[row][col + 1] !== null &&
-            this._gemGrid[row][col + 2] !== null &&
-            this._gemGrid[row][col].color === this._gemGrid[row][col + 1].color &&
-            this._gemGrid[row][col].color === this._gemGrid[row][col + 2].color) {
+        let gem = this._gemGrid[row][col];
+        let gem1 = this._gemGrid[row][col + 1];
+        let gem2 = this._gemGrid[row][col + 2];
+
+        if (gem && gem1 && gem2 && gem.color === gem1.color && gem.color === gem2.color) {
 
           let sequence = [this._gemGrid[row][col]];
 
@@ -213,11 +213,12 @@ exports = Class(EventEmitter, function(supr) {
 
       for (let row = 0; row < ROWS_PER_LEVEL - 2; row++) {
 
-        if (this._gemGrid[row][col] !== null &&
-            this._gemGrid[row + 1][col] !== null &&
-            this._gemGrid[row + 2][col] !== null &&
-            this._gemGrid[row][col].color === this._gemGrid[row + 1][col].color &&
-            this._gemGrid[row][col].color === this._gemGrid[row + 2][col].color) {
+        let gem = this._gemGrid[row][col];
+        let gem1 = this._gemGrid[row + 1][col];
+        let gem2 = this._gemGrid[row + 2][col];
+
+
+        if (gem && gem1 && gem2 && gem.color === gem1.color && gem.color === gem2.color) {
 
           let sequence = [this._gemGrid[row][col]];
 
@@ -378,8 +379,6 @@ exports = Class(EventEmitter, function(supr) {
         }
 
         let gemColor = null;
-        let gemFormsSequenceInCol = false;
-        let gemFormsSequenceInRow = false;
 
         do {
 
