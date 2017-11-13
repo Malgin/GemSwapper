@@ -19,6 +19,8 @@ exports = Class(function() {
     this._gameScore = 0;
     this._levelScore = 0;
 
+    this._highScore = 0;
+
     this._build();
   };
 
@@ -84,7 +86,10 @@ exports = Class(function() {
 
     this._gameScore += addScore;
     this._levelScore += addScore;
+
     this._updateScoreViews();
+
+    if (this._gameScore > this._highScore) this._highScore = this._gameScore;
   };
 
   this.getScore = function() {
@@ -95,6 +100,11 @@ exports = Class(function() {
   this.getLevelScore = function() {
 
     return this._levelScore;
+  };
+
+  this.getHighScore = function() {
+
+    return this._highScore;
   };
 
   this.resetScore = function() {

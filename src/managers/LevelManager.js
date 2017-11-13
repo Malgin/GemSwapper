@@ -48,7 +48,7 @@ exports = Class(function() {
 
       case this.LEVEL_TYPE_POINTS_PER_SWAPS:
 
-        if (swapsLeft > 0 && currentScore >= levelCompletionConditions.numberOfPoints) {
+        if (swapsLeft === 0 && currentScore >= levelCompletionConditions.numberOfPoints) {
           return true;
         }
         break;
