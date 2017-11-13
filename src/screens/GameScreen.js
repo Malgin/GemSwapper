@@ -61,6 +61,10 @@ exports = Class(ImageView, function(supr) {
         gem_destroyed: {
           volume: 0.5,
           loop: false
+        },
+        gem_swap: {
+          volume: 0.5,
+          loop: false
         }
       }
     });
@@ -147,6 +151,7 @@ exports = Class(ImageView, function(supr) {
       this._clearClue();
 
       this._swapsCountView.setText(--this._swapsCounter);
+      this._sound.play('gem_swap');
       this._level.swapGems(this._origGem, targetGem);
     } else {
 

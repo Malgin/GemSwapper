@@ -22,7 +22,7 @@ exports = Class(GC.Application, function () {
       path: 'resources/sound/music',
       files: {
         main_theme: {
-          volume: 0.3,
+          volume: 0.1,
           background: true
         }
       }
