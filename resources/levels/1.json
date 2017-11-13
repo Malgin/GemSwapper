@@ -8,7 +8,7 @@
   "levelCompletionConditions": {
     "type": "pointsPerSwaps",
     "numberOfPoints": 1000,
-    "numberOfSwaps": 20
+    "numberOfSwaps": 10
   },
   "levelLayout": [
     [1,1,1,1,1,1,1,1,1],

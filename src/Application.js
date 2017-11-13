@@ -1,4 +1,5 @@
 import device;
+import AudioManager;
 
 import ui.TextView as TextView;
 import ui.StackView as StackView;
@@ -16,6 +17,18 @@ exports = Class(GC.Application, function () {
     this.engine.updateOpts({
       preload: ['resources/images']
     });
+
+    this._music = new AudioManager({
+      path: 'resources/sound/music',
+      files: {
+        main_theme: {
+          volume: 0.3,
+          background: true
+        }
+      }
+    });
+
+    this._music.play('main_theme');
 
     this._rootView = new StackView({
       superview: this,
@@ -41,7 +54,6 @@ exports = Class(GC.Application, function () {
 
     this._rootView.push(this._gameScreen);
     this._gameScreen.emit(this._gameScreen.EVENT_RESET_GAME);
-
   };
 
   this.launchUI = function () {

@@ -1,6 +1,7 @@
 import math.geom.Point as Point;
 
 import animate;
+import AudioManager;
 
 import ui.ParticleEngine as ParticleEngine;
 
@@ -15,6 +16,8 @@ import src.models.gem.Gem as Gem;
 const SWAP_FORBIDDEN_ANIMATION_DURATION = 50;
 const SWAP_CLUE_ANIMATION_DURATION = 600;
 const SWAP_CLUE_ANIMATION_PAUSE = 300;
+
+const GEM_DESTROY_SOUND_EFFECT_DELAY = 20;
 
 exports = Class(ImageView, function(supr) {
 
@@ -51,6 +54,16 @@ exports = Class(ImageView, function(supr) {
   };
 
   this._build = function() {
+
+    this._sound = new AudioManager({
+      path: 'resources/sound/effects',
+      files: {
+        gem_destroyed: {
+          volume: 0.5,
+          loop: false
+        }
+      }
+    });
 
     this._pEngine = new ParticleEngine({
       superview: this,
@@ -181,6 +194,7 @@ exports = Class(ImageView, function(supr) {
       vertSequences: this._level.detectVerticalSequences()
     };
 
+    this._playDestroyedSequenceSoundEffect(sequences);
     this._scoreManager.addScoreForSequences(sequences);
     this._level.deleteSequences(sequences);
   };
@@ -211,17 +225,38 @@ exports = Class(ImageView, function(supr) {
     this._level.releaseGem(gem);
   };
 
+  this._playDestroyedSequenceSoundEffect = function({ horizSequences, vertSequences }) {
+
+    let totalSequencesGemNum = 0;
+
+    for (let i = 0, seqNum = horizSequences.length; i < seqNum; i++) {
+
+      for (let j = 0, gemNum = horizSequences[i].length; j < gemNum; j++) {
+
+        setTimeout(bind(this, function() {
+
+          this._sound.play('gem_destroyed');
+        }), GEM_DESTROY_SOUND_EFFECT_DELAY * totalSequencesGemNum++);
+      }
+    }
+
+    for (let i = 0, seqNum = vertSequences.length; i < seqNum; i++) {
+
+      for (let j = 0, gemNum = vertSequences[i].length; j < gemNum; j++) {
+
+        setTimeout(bind(this, function() {
+
+          this._sound.play('gem_destroyed');
+        }), GEM_DESTROY_SOUND_EFFECT_DELAY * totalSequencesGemNum++);
+      }
+    }
+  };
+
   this._detectSequencesOrEnableInteraction = function() {
 
     if (this._level.hasDeletableSequences()) {
 
-      let sequences = {
-        horizSequences: this._level.detectHorizontalSequences(),
-        vertSequences: this._level.detectVerticalSequences()
-      };
-
-      this._scoreManager.addScoreForSequences(sequences);
-      this._level.deleteSequences(sequences);
+      this._destroyGemSequences();
     } else {
 
 

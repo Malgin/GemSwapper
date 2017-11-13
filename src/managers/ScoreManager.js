@@ -70,18 +70,12 @@ exports = Class(function() {
 
     for (let i = 0, seqNum = horizSequences.length; i < seqNum; i++) {
 
-      if (horizSequences[i].length >= 3) {
-
         addScore += this._getScoreForSequenceLength(horizSequences[i].length);
-      }
     }
 
     for (let i = 0, seqNum = vertSequences.length; i < seqNum; i++) {
 
-      if (vertSequences[i].length >= 3) {
-
         addScore += this._getScoreForSequenceLength(vertSequences[i].length);
-      }
     }
 
     this._gameScore += addScore;
