@@ -89,6 +89,8 @@ exports = Class(EventEmitter, function(supr) {
     let gemCol = Math.ceil((point.x - LEFT_PADDING) / (DISTANCE_BETWEEN_GEMS + Gem.GEM_WIDTH)) - 1;
     let gemRow = Math.ceil((point.y - TOP_PADDING) / (DISTANCE_BETWEEN_GEMS + Gem.GEM_HEIGHT)) - 1;
 
+    if (gemRow >= this._gemGrid.length || gemCol >= this._gemGrid[gemRow].length) return null;
+
     return this._gemGrid[gemRow][gemCol];
   };
 

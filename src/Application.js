@@ -47,7 +47,7 @@ exports = Class(GC.Application, function () {
 
     this._menuScreen.on(this._menuScreen.EVENT_START_GAME, bind(this, this._onStartGame));
 
-    this._menuScreen.show();
+    // this._menuScreen.show();
 
     // Initiate game screen
     this._gameScreen = new GameScreen({
@@ -59,7 +59,9 @@ exports = Class(GC.Application, function () {
 
     this._gameScreen.on(this._gameScreen.EVENT_END_GAME, bind(this, this._onEndGame));
 
-    this._rootView.push(this._menuScreen);
+    // this._rootView.push(this._menuScreen);
+    this._rootView.push(this._gameScreen);
+    this._gameScreen.emit(this._gameScreen.EVENT_RESET_GAME);
   };
 
   this.launchUI = function () {
@@ -79,8 +81,8 @@ exports = Class(GC.Application, function () {
 
     // TODO stop playing any music
     // TODO start playing menu music
-    this._rootView.pop();
-    this._menuScreen.show();
+    // this._rootView.pop();
+    // this._menuScreen.show();
   }
 
 });

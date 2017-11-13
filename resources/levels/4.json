@@ -1,7 +1,7 @@
 {
-  "title": "Level 2",
-  "name": "2",
-  "nextLevel": "3",
+  "title": "Level 4",
+  "name": "4",
+  "nextLevel": null,
   "greetingText": "Hello! This is fun level to play. Let's see if you can collect those gems to get 1000 points with only 10 swaps!",
   "winningText": "Well done!",
   "loosingText": "Don't be sad! Want to try once more?",
@@ -11,14 +11,14 @@
     "numberOfSwaps": 10
   },
   "levelLayout": [
-    [0,0,0,1,1,1,0,0,0],
-    [0,0,1,1,1,1,1,0,0],
-    [0,1,1,1,1,1,1,1,0],
-    [1,1,1,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,1],
+    [1,1,0,1,1,1,0,1,1],
     [1,1,1,1,1,1,1,1,1],
     [0,1,1,1,1,1,1,1,0],
-    [0,0,1,1,1,1,1,0,0],
-    [0,0,0,1,1,1,0,0,0]
+    [1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1],
+    [0,1,1,1,1,1,1,1,0],
+    [1,1,1,1,1,1,1,1,1],
+    [1,1,0,1,1,1,0,1,1]
   ]
 }

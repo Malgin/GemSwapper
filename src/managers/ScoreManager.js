@@ -15,7 +15,9 @@ exports = Class(function() {
     this._container = opts.container;
 
     this._scoreTextView = null;
+    this._levelScoreTextView = null;
     this._gameScore = 0;
+    this._levelScore = 0;
 
     this._build();
   };
@@ -33,19 +35,31 @@ exports = Class(function() {
 
     animate(scoreView).now({ y: 0 });
 
-    this._scoreTextView = new TextView({
+    this._levelScoreTextView = new TextView({
       superview: scoreView,
       width: scoreView.style.width / 1.5,
       height: scoreView.style.height / 3,
       autoFontSize: true,
       x: (scoreView.style.width - (scoreView.style.width / 1.5)) / 2, // center textView within score ImageView
-      y: 80,
+      y: 90,
       verticalAlign: 'middle',
       horizontalAlign: 'center',
       color: '#fff'
     });
 
-    this._scoreTextView.setText(`${ this._gameScore }`);
+    this._scoreTextView = new TextView({
+      superview: scoreView,
+      width: scoreView.style.width / 4,
+      height: scoreView.style.height / 8,
+      autoFontSize: true,
+      x: (scoreView.style.width - (scoreView.style.width / 4)) / 2, // center textView above scoreTextView
+      y: 75,
+      verticalAlign: 'middle',
+      horizontalAlign: 'center',
+      color: '#fff'
+    });
+
+    this._updateScoreViews();
   };
 
   this.addScoreForSequences = function({ horizSequences, vertSequences }) {
@@ -69,18 +83,31 @@ exports = Class(function() {
     }
 
     this._gameScore += addScore;
-    this._scoreTextView.setText(this._gameScore);
+    this._levelScore += addScore;
+    this._updateScoreViews();
   };
 
-  this.getScores = function() {
+  this.getScore = function() {
 
     return this._gameScore;
+  };
+
+  this.getLevelScore = function() {
+
+    return this._levelScore;
   };
 
   this.resetScore = function() {
 
     this._gameScore = 0;
-    this._scoreTextView.setText(this._gameScore);
+    this._levelScore = 0;
+    this._updateScoreViews();
+  };
+
+  this.resetLevelScore = function() {
+
+    this._levelScore = 0;
+    this._updateScoreViews();
   };
 
   this._getScoreForSequenceLength = function(length) {
@@ -89,5 +116,11 @@ exports = Class(function() {
     const bonusForLength = Math.pow(10, (length - 3));
 
     return baseScore + bonusForLength;
+  };
+
+  this._updateScoreViews = function() {
+
+    this._scoreTextView.setText(this._gameScore);
+    this._levelScoreTextView.setText(this._levelScore);
   };
 });

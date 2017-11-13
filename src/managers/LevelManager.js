@@ -14,25 +14,26 @@ exports = Class(function() {
     this.currentLevelConfig = null;
 
     this._container = opts.container;
-    this._levelGrid = null;
+
+    this.currentLevelConfig = JSON.parse(CACHE[`resources/levels/1.json`]);
+
+    this._levelGrid = new LevelGrid({
+      container: this._container,
+      gridLayout: this.currentLevelConfig.levelLayout
+    });
+  };
+
+  this.getLevelGrid = function() {
+
+    return this._levelGrid;
   };
 
   this.initLevel = function(level = 1) {
 
     this.currentLevelConfig = JSON.parse(CACHE[`resources/levels/${level}.json`]);
 
-    if (!this._levelGrid) {
-
-      this._levelGrid = new LevelGrid({
-        container: this._container,
-        gridLayout: this.currentLevelConfig.levelLayout
-      });
-    } else {
-
-      this._levelGrid.setLayout(this.currentLevelConfig.levelLayout);
-      // TODO: pop all existing gems
-      // this._levelGrid.resetGemGrid();
-    }
+    this._levelGrid.setLayout(this.currentLevelConfig.levelLayout);
+    // TODO: pop all existing gems
 
     this._levelGrid.resetGemGrid();
 

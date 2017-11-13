@@ -69,7 +69,7 @@ exports = Class(ImageView, function(supr) {
       container: this
     });
 
-    this._level = this._levelManager.initLevel(1);
+    this._level = this._levelManager.getLevelGrid();
     this._swapsCounter = this._levelManager.getLevelSwapsAmount();
 
     this._swapsCountView = new TextView({
@@ -225,20 +225,22 @@ exports = Class(ImageView, function(supr) {
     } else {
 
 
-      if (this._levelManager.levelCompleted(this._swapsCounter, this._scoreManager.getScores())) {
+      if (this._levelManager.levelCompleted(this._swapsCounter, this._scoreManager.getLevelScore())) {
 
         // move to next level or win a game
         if (this._levelManager.hasNextLevel()) {
 
           this._levelManager.initNextLevel();
           this._swapsCounter = this._levelManager.getLevelSwapsAmount();
+          this._swapsCountView.setText(this._swapsCounter);
+          this._scoreManager.resetLevelScore();
         } else {
 
           // win the game!
           // TODO Show message, back to menu
           this.emit(this.EVENT_END_GAME);
         }
-      } else if (this._levelManager.levelLost(this._swapsCounter, this._scoreManager.getScores())) {
+      } else if (this._levelManager.levelLost(this._swapsCounter, this._scoreManager.getLevelScore())) {
 
         // TODO show message, back to menu
         this.emit(this.EVENT_END_GAME);
