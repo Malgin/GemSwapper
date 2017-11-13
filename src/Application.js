@@ -68,6 +68,7 @@ exports = Class(GC.Application, function () {
 
   this._onEndGame = function() {
 
+    this._gameScreen.emit(this._gameScreen.EVENT_RESET_GAME);
     // TODO stop playing any music
     // TODO start playing menu music
   };
