@@ -107,7 +107,7 @@ var CACHE_NAME = CACHE_NAME_APP_PREFIX + APP_VERSION;
 // these are URLs we've already loaded by the time the worker is running, just
 // cache these explicitly
 var BASE_URLS = [
-  'index.html','native-ios.js'
+  'index.html','browser-mobile.js'
 ];
 
 var hostURL = location;
