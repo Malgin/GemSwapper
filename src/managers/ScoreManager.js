@@ -72,6 +72,11 @@ exports = Class(function() {
     this._scoreTextView.setText(this._gameScore);
   };
 
+  this.getScores = function() {
+
+    return this._gameScore;
+  };
+
   this.resetScore = function() {
 
     this._gameScore = 0;

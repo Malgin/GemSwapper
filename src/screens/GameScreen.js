@@ -12,8 +12,6 @@ import src.managers.ScoreManager as ScoreManager;
 import src.LevelGrid as LevelGrid;
 import src.models.gem.Gem as Gem;
 
-const SWAP_INITIAL_COUNT = 20;
-
 const SWAP_FORBIDDEN_ANIMATION_DURATION = 50;
 const SWAP_CLUE_ANIMATION_DURATION = 600;
 const SWAP_CLUE_ANIMATION_PAUSE = 300;
@@ -40,7 +38,7 @@ exports = Class(ImageView, function(supr) {
 
     this._forbiddenSwapTimer = null;
 
-    this._swapsCounter = SWAP_INITIAL_COUNT;
+    this._swapsCounter = 0;
     this._swapsCountView = null;
 
     opts = merge(opts, {
@@ -71,6 +69,9 @@ exports = Class(ImageView, function(supr) {
       container: this
     });
 
+    this._level = this._levelManager.initLevel(1);
+    this._swapsCounter = this._levelManager.getLevelSwapsAmount();
+
     this._swapsCountView = new TextView({
       superview: this,
       width: this.style.width,
@@ -89,8 +90,6 @@ exports = Class(ImageView, function(supr) {
     this.on('InputSelect', bind(this, this._onInputSelect));
 
     this.on(this.EVENT_RESET_GAME, bind(this, this._resetGame));
-
-    this._level = this._levelManager.initLevel(1);
 
     this._level.on('BuildLevelFinished', bind(this, this._onBuildLevelFinished));
 
@@ -164,8 +163,8 @@ exports = Class(ImageView, function(supr) {
 
   this._resetGame = function() {
 
-    this._swapsCounter = SWAP_INITIAL_COUNT;
-    this._level.resetGemGrid();
+    this._levelManager.initLevel(1);
+    this._swapsCounter = this._levelManager.getLevelSwapsAmount();
     this._scoreManager.resetScore();
   };
 
@@ -225,14 +224,28 @@ exports = Class(ImageView, function(supr) {
       this._level.deleteSequences(sequences);
     } else {
 
-      if (this._swapsCounter > 0) {
+
+      if (this._levelManager.levelCompleted(this._swapsCounter, this._scoreManager.getScores())) {
+
+        // move to next level or win a game
+        if (this._levelManager.hasNextLevel()) {
+
+          this._levelManager.initNextLevel();
+          this._swapsCounter = this._levelManager.getLevelSwapsAmount();
+        } else {
+
+          // win the game!
+          // TODO Show message, back to menu
+          this.emit(this.EVENT_END_GAME);
+        }
+      } else if (this._levelManager.levelLost(this._swapsCounter, this._scoreManager.getScores())) {
+
+        // TODO show message, back to menu
+        this.emit(this.EVENT_END_GAME);
+      } else {
 
         this._enableUserInteraction();
         this._fireUpClueAnimation();
-      } else {
-
-        // end game
-        this.emit(this.EVENT_END_GAME);
       }
     }
   };

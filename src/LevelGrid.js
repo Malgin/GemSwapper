@@ -339,6 +339,11 @@ exports = Class(EventEmitter, function(supr) {
     this._gemPool.releaseView(gem);
   };
 
+  this.setLayout = function(layout) {
+
+    this._gemGridLayout = layout;
+  };
+
   this.resetGemGrid = function() {
 
     this._gemPool.releaseAllViews();
